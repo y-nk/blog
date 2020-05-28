@@ -1,0 +1,23 @@
+{
+  "name": "blog",
+  "version": "1.0.0",
+  "author": "Julien Barbay <julien.barbay@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "serve": "draft renderers.js",
+    "build": "write renderers.js",
+    "postbuild": "npm run minify:html && npm run minify:css",
+    "minify:html": "for f in ./dist/**/*.html; do html-minifier-terser -c ./hmt.config.json -o $f $f; done",
+    "minify:css": "postcss ./dist/*.css -r",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d ./dist"
+  },
+  "keywords": [],
+  "dependencies": {
+    "cssnano": "^4.1.10",
+    "encre": "^2.2.0",
+    "gh-pages": "^2.2.0",
+    "html-minifier-terser": "^5.1.1",
+    "postcss-cli": "^7.1.1"
+  }
+}
