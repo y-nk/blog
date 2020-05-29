@@ -1,0 +1,145 @@
+<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content="Julien Barbay"property=og:title><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – martian.sta7es, a state machine package</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content="Deepdive into the routing system of my AS3 library"name=description><meta content="Deepdive into the routing system of my AS3 library"name=og:description><meta content=/martian-sta7es-a-state-machine-package.html name=og:url><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>martian.sta7es, a state machine package</h2><h6>November 14th, 2011</h6></hgroup><article><p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer><h3 id=what-is-a-state-machine>What is a state machine.</h3><p>According to wikipedia, a “final” state machine is:<blockquote><p>a mathematical model used to design computer programs and digital logic circuits. It is conceived as an abstract machine that can be in one of a finite number of states. The machine is in only <strong>one state at a time</strong>; the state it is in at any given time is called the current state. It can <strong>change from one state to another when initiated by a triggering event</strong> or condition, thisis called a transition. A particular FSM is defined by a list of the possible states it can transition to from each state, and the triggering condition for each transition.</blockquote><p>Applied to flash, a state machine could be an entity that manage levels in a game or more advanced, <strong>manage the display list in order to be at a given state at any time</strong>. And that’s exactly what it's all about here.<p>This package deals with handling the display list of a flash application, such as a website. It ensures that a given screen (Sprite, Movieclip) will be displayed given certain parameters (mainly, a url).<p>To do so, we'll need some kind of regulating agent (a router, basically): the <strong>Front Controller</strong>.<h3 id=the-smart-guy>The smart guy</h3><p>It should be very familiar to you if you come from the server-side world. In the backend the front controller is usually a simple, straightforward, most of the time config-driven routing system. It only applies one state but rarely survives further since every webpage is a new instance of the program (http being single calls, if you get me).<p>In the client, the application is always the same instance. It runs and mutates continously... so we kinda need to separate who decides and who applies, since the application process is a finished algorithm, but the decision part isn't.<p>So the plan is simple, there'll be a <strong>front controller</strong> which will <strong>decide</strong> which state to apply but the execution will be delegated to a <strong>the state machine</strong> which will only <strong>apply</strong> the change. All that so the complicated code will be in my library (the state machine), while you'll be providing the front controller (basically a big switch case statement).<p>Let’s do some code. To make lines shorter, I called the state machine <code>State</code>, and the interface of a FrontController <code>Controller</code>.<p>First, we create the state machine, and initialize it.<pre><code>var state:State = new State();
+state.hook(this, new MyController());</code></pre><p>and to trigger a change:<pre><code>state.load('/home');</code></pre><p>As said in the wikipedia definition, a finite state machine should know about all the states and all the triggers. But since the task is separated into two objects, only the front controller needs to know about that.<p>Let’s have a look at our <code>MyController()</code> :<pre><code>public class MyController implements Controller {
+    public function handle(slug:String): Statement {
+        switch(slug) {
+            case '/home':
+                return new Statement(HomeClip);
+
+            case '/contact':
+                return new Statement(ContactClip);
+        }
+
+        return null;
+    }
+}</code></pre><p>That's all you need to know. A controller is a simple object which needs a single function <code>handle</code>. This function takes a <code>slug</code> (a kinda url) in input, and returns a <code>Statement</code>.<p>Now, when the state machine will be aware of a triggering event (such as an url change), it will ask the front controller "what I should do about it?" and your code will reply something like "yeah, show that Movieclip".<p>Here, the <code>Statement</code> object represents a wrapper for data about the next state. It’s holding: the next state itself, but also some parameters you would pass to it and the type of transition to apply as well as optional parameters for that transition.<p>Yes ; because it’s visual, you may want to apply transitions between two states, so your clips just don’t appear/disappear like a flash in a millisecond.<h3 id=transitions>Transitions</h3><p>I spent a lot of time thinking about modularity and what would be the best compromize between a dummy implementation and a brain fucking one. After a while, i went to this simple idea: a transition only needs to know about where it comes from and where it goes. That’s it.<p>Let’s say we want to create something like a <em>crossfading</em> transition:<pre><code>public class CrossFading extends Transition {
+    public function CrossFading(a:DisplayObject, b:DisplayObject):void {
+        super(a, b);
+    }
+
+    override public function setup(): void {
+    }
+
+    override public function start():void {
+    }
+}</code></pre><p>That’s all you need to start. The end of your transition should be notified by a <code>Transition.STOP</code> event dispatch.<p>Because of the diversity of the effects you would want to perform, i figured out that the state machine <strong>should not care</strong> about dealing with the addChild/removeChild stuff. <strong>It’s up to the transition to know what to display at any time</strong>.<pre><code>public class CrossFading extends Transition {
+    private var duration:Number;
+
+    public function CrossFading(a:DisplayObject, b:DisplayObject):void {
+        super(a, b);
+    }
+
+    override public function setup(mod_params:Object = null, trans_params:Object = null):void {
+        this.duration = trans_params.duration;
+    }
+
+    override public function start():void {
+        TweenMax.to(a, 400, { autoAlpha:0, onComplete:p.removeChild, onCompleteParams:[a] });
+        TweenMax.from(b, 400, { autoAlpha:0, onComplete:dispatchEvent, onCompleteParams:[new Event(Transition.STOP)] });
+    }
+}</code></pre><p>There are some details about what’s going on here:<p>• the <code>setup</code> function is called by the state machine right after the construction of the transition, and it initializes it with some given parameters.<p>• the Transition has a <code>start():void;</code> function which reminds of the <code>Stackable</code> interface from <a href=./martian-t1me-a-sequencing-package.html>martian.t1me package</a>... because it implements it :) So, any transition is <code>Stackable</code> and can be used in sequences of transitions (...madness).<p>• An other good thing is that if you take some time to code your transition and design it well, you can keep it in a separate toolbox.<p>• Finally, it’s also very cool to notice that <strong>Transition could also work in standalone mode</strong>. If you need a special fx for a project that doesn’t use any state machine, it doesn’t matter.<p>So now, how to plug this nice transition into our front controller:<pre><code>public class MyController implements Controller {
+    public function handle(slug:String):Statement {
+        switch(slug) {
+            case '/home':
+                return new Statement(HomeClip, {
+                    transition: CrossFading,
+                    transition_parameters: { duration:200 }
+                });
+
+            case '/contact':
+                return new Statement(ContactClip, {
+                    transition: CrossFading, 
+                    transition_parameters: { duration:200 }
+                });
+        }
+
+        return null;
+    }
+}</code></pre><p>I had <strong>lots</strong> of differents tries with that implementations.<p>Thing is, <em>sometimes</em> i was passing parameters to the state itself, <em>sometimes not</em> ; <em>sometimes</em> i was using a Transition, and <em>only sometimes with</em> parameters. There were <strong>too many sometimes</strong>, so I decided to write the <code>Statement</code> constructor with only the one mandatory parameter and then all other extra parameters wrapped in a big anonymous object — it can be lame since it's not typed, but it’s damn handy.<p>Now, when triggering an changing event the state machine will take the condition, give it to the front controller, receive a Statement of what to do. It will create the new state, the given transition and will let the transition do its work until it's done.<p>The first transition I did was (obviously) one (named <code>Cut</code>) which does a simple <code>addChild</code>/<code>removeChild</code> switch. Then, I realized sometimes a DisplayObject should be able to manage itself how it should appear and disappear ; for this usecase I added my second core transition, called <code>Slave</code>.<p>The slave transition will work with a certain type of Sprite, and instead of actively doing its transition work, will call the <code>show</code> or <code>hide</code> methods of that special Sprite to perform the transition.<h3 id=introducing-module>Introducing Module</h3><p>It could be seen as a super Sprite. A Sprite that is <strong>aware of the different steps of being a part of a state changing process</strong>. It knows about initialization, appearance, disappearance, and destruction.<p>It’s pretty useful and could be used as a replacement of the regular Sprite, even without any state machine. It’s a very broad concept and I think it should be named in a way that people it could work separatedly, to keep in mind the modularity. Thus, <code>Module</code>.<p>It has 4 main functions: <strong>init</strong>, <strong>show</strong>, <strong>hide</strong>, and <strong>kill</strong> for initialization, appearance, disappearance, and destruction.<p>As this type belongs to the state machine system, the state machine itself can the initialization and destruction processes.<p>Initialization is known as completed by the state machine when the module dispatches a <code>Module.READY</code> event while destruction needs a <code>Module.KILLED</code> event.<p>Appearance and disappearance processes should be handled, naturally, by a Transition since it’s a visual effect... and that’s what the <code>Slave</code> transition does: it performs a simple hide/show sequence letting each module (<em>current</em> and <em>next</em>) deal with their visual animations. To let the Slave transition know about the progression of appearance/disappearance, each module needs to dispatch a <code>Module.SHOWN</code> or <code>Module.HIDDEN</code> event.<p>With that kind of system, it’s damn easy to do whatever you want:<p>• If you need a kind of <em>external</em> transition, simply extend Transition • If you need a kind of <em>internal</em> transition, use Slave directly • If you need an <em>internal</em> transition but with overlaping of the 2 modules, use Slave and dispatch your <code>Module.HIDDEN</code> before the end of your transition • If you need both internal and external transition system, you can try your own Transition and take care internally of the events<p>That way, it’s fully customizable with staying the best compromize between flexibility and hard coding.<h3 id=deeplinking>Deeplinking</h3><p>As you may know, deeplinking is a technique which (roughly) listen to the url of the browser, and react to it (with changes on the screen, parameters etc...).<p>If you remember the way to load a state, the <code>state.load</code> take a <em>slug</em> as input. It could be any kind of string, so why not the browser's url?<p>As I already worked on my own deeplinking library, it has been <strong>very</strong> easy to implement the connection with the state machine... but as it’s not necessary to use it, I kept it a bit separated :) That way, the deeplinking part is away from the state machine and should be initialized separately ; when it’ll initialized the state machine will know it automatically, and any external change will be treated as a triggering event by the state machine.<pre><code>var deeplinking:Deeplinking = new Deeplinking();
+deeplinking.hook(stage);</code></pre><p>Under the hood, I worked on a way for them to <em>know</em> each other. When instanciated, they register themselves into a common static dictionary, so they can ask for each other from there.<h3 id=cherry-on-the-cake>Cherry on the cake</h3><p>Because medium to big projects can have a verbose front controller structure, I decided to create an xml based configurable controller. It’s highly inspired from the C# routing system, and that’s probably why it’s called <code>Router</code>.<p>Let’s see how it works, and then, its xml definition scheme.<pre><code>var state:State = new State();
+state.hook(this, new Router(someXML, customValidationObject));</code></pre><p>For now, we'll talk about the <code>someXML</code> part. If you give an XML, it will use it directly. If you pass a String ending with <code>.xml</code> or <code>.php</code>, it will handle the process of loading that file. Worth noticing, <code>Router</code> is a <code>Stackable</code> object, so you can (and should) put it in a Queue at the beginning of your project.<pre><code>&lt;data>
+    &lt;states app="app.states" default="/">
+        &lt;state>
+            &lt;id>home&lt;/id>
+            &lt;module>Home&lt;/module>
+            &lt;slug>/&lt;/slug>
+            &lt;title>&lt;/title>
+            &lt;keywords>&lt;/keywords>
+        &lt;/state>
+
+        &lt;state>
+            &lt;id>page1&lt;/id>
+            &lt;module>Page1&lt;/module>
+            &lt;slug>
+                &lt;pattern>/page/1&lt;/pattern>
+                &lt;parameters>
+                    &lt;color>0xff0000&lt;/color>
+                &lt;/parameters>
+            &lt;/slug>
+            &lt;title>&lt;/title>
+            &lt;keywords>&lt;/keywords>
+        &lt;/state>
+
+        &lt;state>
+            &lt;id>pages&lt;/id>
+            &lt;module>OtherPage&lt;/module>
+            &lt;slug>
+                &lt;pattern>/page/{var1}/{var2}/{var3}&lt;/pattern>
+                &lt;constraints>
+                    &lt;var1>@[0-9]&lt;/var1>
+                    &lt;var2>delegatefunction&lt;/var2>
+                    &lt;var3 optional='true' />
+                &lt;/constraints>
+            &lt;/slug>
+            &lt;title>&lt;/title>
+            &lt;keywords>&lt;/keywords>
+        &lt;/state>
+
+        &lt;state>
+            &lt;id>404&lt;/id>
+            &lt;module>Error404&lt;/module>
+            &lt;slug>/404&lt;/slug>
+            &lt;title>&lt;/title>
+            &lt;keywords>&lt;/keywords>
+        &lt;/state>
+    &lt;/states>
+
+    &lt;notfound>/404&lt;/notfound>
+
+    &lt;transitions app="app.transitions" default="Slave">
+        &lt;transition from="home" to="*">OverlapIn&lt;/transition>
+
+        &lt;transition from="*" to="home">
+            &lt;name>MyCustomTransitionBack&lt;/name>
+
+            &lt;parameters>
+                &lt;duration>2&lt;/duration>
+            &lt;/parameters>
+        &lt;/transition>        
+    &lt;/transitions>
+&lt;/data></code></pre><p>Hum. So here, nothing <em>really</em> complicated. At least, I hope so. I designed it to be self-explanatory, but for the article let me get you through it quickly.<p>The <code>states</code> area has only 2 attributes, which are <code>app</code> (the package holding the states), and an optional <code>default</code> url (to launch at startup). Each state is defined into a <code>state</code> node, nested in the <code>states</code> area. A basic state definition looks like:<pre><code>&lt;state>
+    &lt;id>a unique id for this state&lt;/id>
+    &lt;module>the name of the module's class&lt;/module>
+    &lt;title>&lt;/title>
+    &lt;keywords>&lt;/keywords>
+&lt;/state></code></pre><p>The title and keywords tags are only there for injecting into the browser. Nothing more.<p>On top of that, there's a modulable <code>&lt;slug /></code> node which can take multiple forms:<p>• The <em>static</em> url one: <code>&lt;slug>/url/to/match&lt;/slug></code><p>• The <em>dynamic</em> url one:<pre><code>&lt;slug>
+    &lt;pattern>/url/{to}/{match}&lt;/pattern>
+&lt;/slug></code></pre><p>• The <em>constraint driven dynamic</em> url one:<pre><code>&lt;slug>
+    &lt;pattern>/url/{to}/{match}&lt;/pattern>
+    &lt;constraints>
+        &lt;to>@^regex_expression[0-9]*&lt;/to>
+        &lt;match>delegateFunctionCall&lt;/match>
+    &lt;/constraints>
+&lt;/slug></code></pre><p>In those constraints, you can type a regular regex or the name of a function. This function must be part of the <code>customValidationObject</code> given in the constructor of the <code>Router</code>. This function must take a String an return a Boolean.<pre><code>var customValidationObject:Object = new Object();
+customValidationObject.delegateFunctionCall = function(s:String):Boolean {
+    return s.indexOf('valid') != -1;
+};
+
+var state:State = new State();
+state.hook(this, new Router(someXML, customValidationObject));</code></pre><p>You can also pass optional parameters which can have default values. Any time a default value is written, the parameter becomes optional:<pre><code>&lt;slug>
+    &lt;pattern>/url/{to}/{match}/{eventually}&lt;/pattern>
+    &lt;constraints>
+        &lt;to>@^regex_expression[0-9]*&lt;/to>
+        &lt;match>delegateFunctionCall&lt;/match>
+        &lt;eventually default="false">@(true|false)&lt;/eventually>
+    &lt;/constraints>
+&lt;/slug></code></pre><p>If no pattern matches, the code will eventually throw an Error and break your swf. To prevent that, you can give a <code>&lt;notfound /></code> node inside your XML file and it'll your fallback state.<p>All the parameters coming from the slug will be given in an object during the <code>init</code> call of your module. You can even pass mandatory extra parameters with a <code>parameters</code> node (as seen in the 'page1' module above).<p>Transitions can also be set up from the <code>transitions</code> area where you can find the same <code>app</code> and <code>default</code> concepts than in the <code>&lt;states /></code> node.<p>Each transition node has a <code>&lt;name /></code> node, which holds the name of the transition’s class, and a <code>parameters</code> one similar to slug‘s <code>&lt;parameters /></code> node. Those datas will be given in an object at the transition’s <code>setup</code> call. You can also set Flex-like filters to define how transitions should apply with the <code>from</code> and <code>to</code> attributes using a state's <code>&lt;id /></code> or <code>*</code> to match all.<p>While the upper layer seems more complex, it's been built once so we don't have to deal with that shit anymore :)<p>The only drawback of using this XML driven loading strategy is that, since you're not directly referencing your states in the swf they won't be linked at the build... so you gotta force inclusion of your states classes <em>and transitions</em> to link them properly to your application.<p>And... that's all :)<p><a href=https://github.com/y-nk/io/tree/master/src/martian/sta7es>Sources for this package can be found here</a></article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
