@@ -1,7 +1,82 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – martian.t1me, a sequencing package</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content=article property=og:type><meta content="Julien Barbay"property=article:author><meta content="martian.t1me, a sequencing package"property=og:title><meta content="A library about asynchronous task managment in AS3"property=description><meta content="A library about asynchronous task managment in AS3"property=og:description><meta content=././martian-t1me-a-sequencing-package.html property=og:url><meta content=1321023600000 property=article:published_time><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>martian.t1me, a sequencing package</h2><h6>November 12th, 2011</h6></hgroup><article><p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer><p>This is an introduction article about some part of am AS3 library I wrote.<p>The sequencing package holds a concept that is used on many parts of the library. So if you're willing to take full advantage of the library, I think it's useful to know what’s going on with this one.<h3 id=quick-look>Quick look</h3><p>As crazy as it sounds, this <em>sequencing</em> package deals with time (and that'd explain its name, <em>t1me</em>). Its primary focus is to handle and regulate how different kind of tasks live during a period of time.<p>I've been thinking how to represent that in the most minimal way, and here's what I came with:<p><strong>A task which can operate through time needs to have a start function, and dispatch a "stop" event.</strong><p>You'd think it's pretty basic, but all what I'm about to tell you about sits on that one principle.<p>So, I've created an interface to represent that. Sadly, interfaces don't include a list of events to be dispatched, so it's not ideal but still.<pre><code>// a class implementing this interface is expected to dispatch a stop event when the task is complete
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – martian.t1me, a sequencing package</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="martian.t1me, a sequencing package"><meta property="description" content="A library about asynchronous task managment in AS3"><meta property="og:description" content="A library about asynchronous task managment in AS3"><meta property="og:url" content="/martian-t1me-a-sequencing-package.html"><meta property="article:published_time" content="1321023600000"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>martian.t1me, a sequencing package</h2>
+    <h6>November 12th, 2011</h6>
+  </hgroup>
+ <article>
+    <p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer></p>
+<p>This is an introduction article about some part of am AS3 library I wrote.</p>
+<p>The sequencing package holds a concept that is used on many parts of the library. So if you're willing to take full advantage of the library, I think it's useful to know what’s going on with this one.</p>
+<h3 id="quick-look">Quick look</h3>
+<p>As crazy as it sounds, this <em>sequencing</em> package deals with time (and that'd explain its name, <em>t1me</em>). Its primary focus is to handle and regulate how different kind of tasks live during a period of time.</p>
+<p>I've been thinking how to represent that in the most minimal way, and here's what I came with:</p>
+<p><strong>A task which can operate through time needs to have a start function, and dispatch a "stop" event.</strong></p>
+<p>You'd think it's pretty basic, but all what I'm about to tell you about sits on that one principle.</p>
+<p>So, I've created an interface to represent that. Sadly, interfaces don't include a list of events to be dispatched, so it's not ideal but still. </p>
+<pre><code>// a class implementing this interface is expected to dispatch a stop event when the task is complete
 interface Stackable {
   public function start(): void;
-}</code></pre><p>I've implemented a bunch of objects using that principle, such as:<p>• <strong>Load</strong>: which is a unique wrapper around most of the loaders of the Flash APi: Loader, URLLoader, Sound • <strong>Message</strong>: is a simple AMFphp call • <strong>Call</strong>: is a single function call with custom arguments. It looks useless at first but trust me it comes handy. • <strong>Delay</strong>: is basically a unique timer, only to time things out. • <strong>Shell</strong>: is a wrapper for any existing object to become Stackable without having to extends or create something special.<p>Some of these objects also implement 2 other interfaces (which came later, on top of the Stackable one):<p>• <strong>Progressive</strong>: adds a <code>progress: Number</code> (0.0 → 1.0) getter. • <strong>Pausable</strong>: introduces pause/resume functions (which i'm sure you know what are for).<p>Both are implemented in some of those objects already.<p>There's also some <em>misc</em> classes:<p>• <strong>Preloader</strong> holds an abstract logic to handle preloaders with Stackable objects. • <strong>Time</strong> is only made of static constants.<p><strong>The big reveal comes now.</strong><h3 id=sequencing-stackables>Sequencing Stackables</h3><p>If you want to execute tasks in a specific timeline, I've created some <em>managers</em> for that.<p>There are 3 types of managers, which cover all the cases:<p>• A <strong>Sequence()</strong> is an object which runs tasks one by one until the last. • A <strong>Group()</strong> starts all its tasks at the same time, and all tasks run in parallel. • A <strong>Queue(conccurents: int)</strong> is a mix of sequence and group. It executes N tasks of a given stack in parallel and when one of them finishes, picks an other task of the remainings and thus until the end.<p>As an implementation detail, a <code>Sequence</code> is a <code>Queue(1)</code> meaning the parallel tasks can only be 1 at a time ; a Group is a <code>Queue(stack.length)</code> meaning that the size of the parallel tasks is "all the tasks".<p>And to break your mind even more, those 3 are also implementing <code>Stackable</code>, <code>Progressive</code> <strong>and</strong> <code>Pausable</code>. So you can make a Sequence of Groups containing Queues of image loaders - ever need you <em>it</em>.<h3 id=examples>Examples</h3><p>• use of <code>Load</code>, wrapper accessibility (events, content access):<pre><code>var image:Load = new Load('img.png', Load.IMAGE);
+}</code></pre>
+<p>I've implemented a bunch of objects using that principle, such as:</p>
+<p>• <strong>Load</strong>: which is a unique wrapper around most of the loaders of the Flash APi: Loader, URLLoader, Sound
+• <strong>Message</strong>: is a simple AMFphp call
+• <strong>Call</strong>: is a single function call with custom arguments. It looks useless at first but trust me it comes handy.
+• <strong>Delay</strong>: is basically a unique timer, only to time things out.
+• <strong>Shell</strong>: is a wrapper for any existing object to become Stackable without having to extends or create something special.</p>
+<p>Some of these objects also implement 2 other interfaces (which came later, on top of the Stackable one):</p>
+<p>• <strong>Progressive</strong>: adds a <code>progress: Number</code> (0.0 → 1.0) getter.
+• <strong>Pausable</strong>: introduces pause/resume functions (which i'm sure you know what are for).</p>
+<p>Both are implemented in some of those objects already.</p>
+<p>There's also some <em>misc</em> classes:</p>
+<p>• <strong>Preloader</strong> holds an abstract logic to handle preloaders with Stackable objects.
+• <strong>Time</strong> is only made of static constants.</p>
+<p><strong>The big reveal comes now.</strong></p>
+<h3 id="sequencing-stackables">Sequencing Stackables</h3>
+<p>If you want to execute tasks in a specific timeline, I've created some <em>managers</em> for that.</p>
+<p>There are 3 types of managers, which cover all the cases:</p>
+<p>• A <strong>Sequence()</strong> is an object which runs tasks one by one until the last.
+• A <strong>Group()</strong> starts all its tasks at the same time, and all tasks run in parallel.
+• A <strong>Queue(conccurents: int)</strong> is a mix of sequence and group. It executes N tasks of a given stack in parallel and when one of them finishes, picks an other task of the remainings and thus until the end.</p>
+<p>As an implementation detail, a <code>Sequence</code> is a <code>Queue(1)</code> meaning the parallel tasks can only be 1 at a time ; a Group is a <code>Queue(stack.length)</code> meaning that the size of the parallel tasks is "all the tasks".</p>
+<p>And to break your mind even more, those 3 are also implementing <code>Stackable</code>, <code>Progressive</code> <strong>and</strong> <code>Pausable</code>. So you can make a Sequence of Groups containing Queues of image loaders - ever need you <em>it</em>.</p>
+<h3 id="examples">Examples</h3>
+<p>• use of <code>Load</code>, wrapper accessibility (events, content access):</p>
+<pre><code>var image:Load = new Load('img.png', Load.IMAGE);
 image.addEventListener(Event.COMPLETE, oncomplete);
 image.load();
 
@@ -17,7 +92,10 @@ xml.load();
 
 function oncomplete2(e:Event):void {
   var data:XML = new XML(e.target.data);
-}</code></pre><p>Let’s try to embed Load into our managers:<p>• Using a sequence to preloads assets of a website:<pre><code>var config:Load = new Load('config.xml', Load.TEXT);
+}</code></pre>
+<p>Let’s try to embed Load into our managers:</p>
+<p>• Using a sequence to preloads assets of a website:</p>
+<pre><code>var config:Load = new Load('config.xml', Load.TEXT);
 var locale:Load = new Load('fr_FR.xml', Load.TEXT);
 var brands:Load = new Load('brands.png', Load.IMAGE);
 var themes:Load = new Load('themes.swf', Load.RSL);
@@ -36,7 +114,9 @@ function setup_ui():void {
 
 function oncomplete(e:Event):void {
   /* display your data */
-}</code></pre><p>• Using a Group to synchronize tasks of custom objects:<pre><code>var shell1:Shell = new Shell(myCustomObject1, "startFunction", "endingEvent");
+}</code></pre>
+<p>• Using a Group to synchronize tasks of custom objects:</p>
+<pre><code>var shell1:Shell = new Shell(myCustomObject1, "startFunction", "endingEvent");
 var shell2:Shell = new Shell(myCustomObject2, "anotherStartFunction", "diffEndingEvent");
 
 var group:Group = new Group();
@@ -46,7 +126,9 @@ group.start();
 
 function oncomplete(e:Event):void {
   /* continue process */
-}</code></pre><p>• Using a Queue to parallelize some heavy downloads while small are sequenced:<pre><code>var bigEmbedVideo:Load = new Load('video.swf', Load.SWF);
+}</code></pre>
+<p>• Using a Queue to parallelize some heavy downloads while small are sequenced:</p>
+<pre><code>var bigEmbedVideo:Load = new Load('video.swf', Load.SWF);
 
 var queue:Queue = new Queue(2);
 queue.addEventListener(Time.STOP, oncomplete);
@@ -60,4 +142,26 @@ queue.start();
 
 function oncomplete(e:Event):void {
   /* loading done */
-}</code></pre><p>I think those examples are covering most of the main topics of the package !<p>As usual, comments are welcome :)<p><a href=https://github.com/y-nk/io/tree/master/src/martian/t1me>Sources for this package can be found here</a></article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+}</code></pre>
+<p>I think those examples are covering most of the main topics of the package !</p>
+<p>As usual, comments are welcome :)</p>
+<p><a href="https://github.com/y-nk/io/tree/master/src/martian/t1me">Sources for this package can be found here</a></p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

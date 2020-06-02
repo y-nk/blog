@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <feed xmlns="http://www.w3.org/2005/Atom">
+  
+    <id>https://y-nk.github.io/blog/</id>
+    <title>y_nk</title>
+    null
+    null
+  
+    null
+    null
+  
+    <updated>2020-06-03T00:00:00.000Z</updated>
+  
+    <author>
+      <name>Julien Barbay</name>
+      <email>julien.barbay@gmail.com</email>
+      <uri>https://twitter.com/y_nk</uri>
+    </author>
+  
+    
+    <entry>
+      <id>encre-a-minimal-blog-engine.html</id>
+      <title>Encre, a minimal blog engine</title>
+      <summary>Build your blog in seconds, customize in minutes.</summary>
+      <link>https://y-nk.github.io/blog/encre-a-minimal-blog-engine.html</link>
+      <updated>2020-06-03T00:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>a-tale-of-politeness.html</id>
+      <title>A tale of politeness</title>
+      <summary>I'm quitting LINE. Here's why.</summary>
+      <link>https://y-nk.github.io/blog/a-tale-of-politeness.html</link>
+      <updated>2020-01-30T00:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>frontend-used-to-be-fun.html</id>
+      <title>Frontend used to be fun</title>
+      <summary>An opinionated 10 years retrospective of the evolving landscape of frontend technologies.</summary>
+      <link>https://y-nk.github.io/blog/frontend-used-to-be-fun.html</link>
+      <updated>2019-11-23T00:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>technology-as-a-design-material.html</id>
+      <title>Technology as a design material</title>
+      <summary>A piece of research on how we can perceive technology as a part of the design process.</summary>
+      <link>https://y-nk.github.io/blog/technology-as-a-design-material.html</link>
+      <updated>2016-06-17T00:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>i-moved-to-india.html</id>
+      <title>I moved to India</title>
+      <summary>The adventure of coding in a different culture</summary>
+      <link>https://y-nk.github.io/blog/i-moved-to-india.html</link>
+      <updated>2014-04-30T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>html-should-be-meaningful.html</id>
+      <title>HTML should be meaningful</title>
+      <summary>Thoughts on the evolution of my POV on HTML and CSS</summary>
+      <link>https://y-nk.github.io/blog/html-should-be-meaningful.html</link>
+      <updated>2012-10-03T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>the-power-of-flash-in-illustrator.html</id>
+      <title>The power of Flash in Illustrator… at most!</title>
+      <summary>Tips around using Adobe PatchPanel to enhance Illustrator CS3 authoring experience</summary>
+      <link>https://y-nk.github.io/blog/the-power-of-flash-in-illustrator.html</link>
+      <updated>2012-10-03T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>pushover-dot-net-and-notifications.html</id>
+      <title>pushover.net and notifications</title>
+      <summary>Get to know who's trying to use your VPN</summary>
+      <link>https://y-nk.github.io/blog/pushover-dot-net-and-notifications.html</link>
+      <updated>2012-09-05T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>martian-sta7es-a-state-machine-package.html</id>
+      <title>martian.sta7es, a state machine package</title>
+      <summary>Deepdive into the routing system of my AS3 library</summary>
+      <link>https://y-nk.github.io/blog/martian-sta7es-a-state-machine-package.html</link>
+      <updated>2011-11-13T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>martian-t1me-a-sequencing-package.html</id>
+      <title>martian.t1me, a sequencing package</title>
+      <summary>A library about asynchronous task managment in AS3</summary>
+      <link>https://y-nk.github.io/blog/martian-t1me-a-sequencing-package.html</link>
+      <updated>2011-11-11T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>the-discovery-of-c-sharp.html</id>
+      <title>The discovery of C-Sharp</title>
+      <summary>Debriefing on lessons learnt while learning a new language</summary>
+      <link>https://y-nk.github.io/blog/the-discovery-of-c-sharp.html</link>
+      <updated>2011-11-06T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>deeplinking-in-html5.html</id>
+      <title>Deeplinking with HTML5</title>
+      <summary>What is deeplinking? How does it work?</summary>
+      <link>https://y-nk.github.io/blog/deeplinking-in-html5.html</link>
+      <updated>2011-10-11T00:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>understanding-mvc.html</id>
+      <title>Understanding MVC</title>
+      <summary>The journey through building a small MVC framework</summary>
+      <link>https://y-nk.github.io/blog/understanding-mvc.html</link>
+      <updated>2011-09-15T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>dynamic-alpha.html</id>
+      <title>Dynamic alpha</title>
+      <summary>Observations on obstruction of background and what we can do about it</summary>
+      <link>https://y-nk.github.io/blog/dynamic-alpha.html</link>
+      <updated>2011-07-24T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>flar-and-papervision.html</id>
+      <title>FLAR + PV3D = ?</title>
+      <summary>Fixes and trials of the combination of Papervsion and FLAR for AR experiences in Flash</summary>
+      <link>https://y-nk.github.io/blog/flar-and-papervision.html</link>
+      <updated>2009-04-08T15:00:00.000Z</updated>
+    </entry>
+<entry>
+      <id>notes-about-html-css-and-oop.html</id>
+      <title>Notes about HTML CSS and OOP</title>
+      <summary>CSS as OOP and other thoughts about how to tidy a project</summary>
+      <link>https://y-nk.github.io/blog/notes-about-html-css-and-oop.html</link>
+      <updated>2008-07-01T15:00:00.000Z</updated>
+    </entry>
+  </feed>

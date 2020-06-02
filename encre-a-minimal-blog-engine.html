@@ -1,12 +1,92 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – Encre, a minimal blog engine</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content=article property=og:type><meta content="Julien Barbay"property=article:author><meta content="Encre, a minimal blog engine"property=og:title><meta content="Build your blog in seconds, customize in minutes."property=description><meta content="Build your blog in seconds, customize in minutes."property=og:description><meta content=././encre-a-minimal-blog-engine.html property=og:url><meta content=1590690835000 property=article:published_time><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>Encre, a minimal blog engine</h2><h6>May 29th, 2020</h6></hgroup><article><p>I've been trying for years to maintain a blog.<br>It's always too much of a hassle, isn't it?<p>At first there was Wordpress. You'd need php, a proper DB for comments and article versions... Even though it was working great, at least until you'd need plugins not to get hacked. Migrations were painful, and theming – while being extremely versatile – is still so complex that it could be a path of career.<p>JAM stacks rised up, slowly and solutions such as <a href=https://jekyllrb.com/ >Jekyll</a>, <a href=https://gohugo.io/ >Hugo</a> and <a href=https://www.gatsbyjs.org/ >Gatsby</a> came by. Today, there's so many offers that we even need <a href=https://www.staticgen.com/ >a website to reference them all</a>.<hr><p>When talking with friends about old articles, it kinda pushed me once more in the quest to revive my blog. There were 2 choices:<ol><li><p>Spend some days trying suitables JAM solutions and decide which one to go with hoping it would be customizable enough yet simple enough not to get me discouraged<li><p>Craft a quick and dirty "bare metal" prototype and improve it as seen needed, until I wouldn't need any other feature</ol><p><strong>I had an index page running in a dev server and built into a static page within 2 hours. That's as much as I needed to get convinced to push further.</strong><h3 id=encre>Encre</h3><p>What the name? Well, it's french for <em>ink</em> and that's the proper way to pronounce my handle, so there's that. Also it's <a href=https://twitter.com/codinghorror/status/506010907021828096>always such a hassle to name things</a>.<p>Encre is a ridiculously small blog engine. It'll inject markdown files into html templates. Nothing more, nothing less.<p>It hasn't been made to compete with giants like gatsby but rather only to fit my needs about how to build a simple blog and sometimes hack into it.<h3 id=setup>Setup</h3><p>The installation process is quite simple since I've been shamelessly use npm for myself, publishing this tool as a package.<pre><code>npm install encre</code></pre><p>You'll have to create a minimal filesystem structure. You can do so by typing:<pre><code>mkdir {static,posts}</code></pre><p>You'll also need a main template. Run <code>touch static/index.html</code> and later add:<pre><code>&lt;!DOCTYPE html>
-&lt;html lang="en">
-  &lt;head>
-    &lt;title>&lt;/title>
-  &lt;/head>
-  &lt;body>
-    &lt;div id="main">&lt;/div>
-  &lt;/body>
-&lt;/html></code></pre><ul><li><p>The <code>posts</code> directory is where you'll put your <code>.md</code> files.<li><p>Your <code>index.html</code> will serve as default layout and must contain a <code>#main</code> node where the dynamic part will be injected.<li><p><em>Optionally</em>, you can have a separate <code>/static/post.html</code> template file for single posts.</ul><p><strong>That's for the setup.</strong><h3 id=development-server-and-build>Development server and build</h3><p>The package exposes two commands which you can use in your <code>package.json</code>.<ul><li>the <strong>draft</strong> command will spawn a simple express server on port 9999 for you to write locally<li>the <strong>write</strong> command builds your files into <code>dist/</code></ul><p>You can invoke them directly using <code>npx</code> with <code>npx draft</code> and <code>npx write</code> or you can put them in your npm scripts to link with other steps:<pre><code>{
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – Encre, a minimal blog engine</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Encre, a minimal blog engine"><meta property="description" content="Build your blog in seconds, customize in minutes."><meta property="og:description" content="Build your blog in seconds, customize in minutes."><meta property="og:url" content="/encre-a-minimal-blog-engine.html"><meta property="article:published_time" content="1591142400000"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>Encre, a minimal blog engine</h2>
+    <h6>June 3rd, 2020</h6>
+  </hgroup>
+ <article>
+    <p>I've been trying for years to maintain a blog.<br>It's always too much of a hassle, isn't it?</p>
+<p>At first there was Wordpress. You'd need php, a proper DB for comments and article versions... Even though it was working great, at least until you'd need plugins not to get hacked. Migrations were painful, and theming – while being extremely versatile – is still so complex that it could be a path of career.</p>
+<p>JAM stacks rised up, slowly and solutions such as <a href="https://jekyllrb.com/">Jekyll</a>, <a href="https://gohugo.io/">Hugo</a> and <a href="https://www.gatsbyjs.org/">Gatsby</a> came by. Today,  there's so many offers that we even need <a href="https://www.staticgen.com/">a website to reference them all</a>.</p>
+<hr>
+<p>When talking with friends about old articles, it kinda pushed me once more in the quest to revive my blog. There were 2 choices:</p>
+<ol>
+<li><p>Spend some days trying suitables JAM solutions and decide which one to go with hoping it would be customizable enough yet simple enough not to get me discouraged</p>
+</li>
+<li><p>Craft a quick and dirty "bare metal" prototype and improve it as seen needed, until I wouldn't need any other feature</p>
+</li>
+</ol>
+<p><strong>I had an index page running in a dev server and built into a static page within 2 hours. That's as much as I needed to get convinced to push further.</strong></p>
+<h3 id="encre">Encre</h3>
+<p>What the name? Well, it's french for <em>ink</em> and that's the proper way to pronounce my handle, so there's that. Also it's <a href="https://twitter.com/codinghorror/status/506010907021828096">always such a hassle to name things</a>.</p>
+<p>Encre is a ridiculously small blog engine. It'll inject markdown files into html templates. Nothing more, nothing less.</p>
+<p>It hasn't been made to compete with giants like gatsby but rather only to fit my needs about how to build a simple blog and sometimes hack into it.</p>
+<h3 id="setup">Setup</h3>
+<p>The installation process is quite simple since I've been shamelessly use npm for myself, publishing this tool as a package.</p>
+<pre><code>npm install encre</code></pre>
+<p>You'll have to create a minimal filesystem structure. You can do so by typing:</p>
+<pre><code>mkdir {layouts,posts,static}</code></pre>
+<p>You'll also need a main template. Run <code>touch layouts/index.html</code> and later add:</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="main"&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<ul>
+<li><p>The <code>posts</code> directory is where you'll put your <code>.md</code> files.</p>
+</li>
+<li><p>Your <code>layouts/index.html</code> will serve as default layout and must contain a <code>#main</code> node where the dynamic part will be injected.</p>
+</li>
+<li><p><em>Optionally</em>, you can have a separate <code>/layouts/post.html</code> template file for single posts.</p>
+</li>
+</ul>
+<p><strong>That's for the setup.</strong></p>
+<h3 id="development-server-and-build">Development server and build</h3>
+<p>The package exposes two commands which you can use in your <code>package.json</code>.</p>
+<ul>
+<li>the <strong>draft</strong> command will spawn a simple express server on port 9999 for you to write locally</li>
+<li>the <strong>write</strong> command builds your files into <code>dist/</code></li>
+</ul>
+<p>You can invoke them directly using <code>npx</code> with <code>npx draft</code> and <code>npx write</code> or you can put them in your npm scripts to link with other steps:</p>
+<pre><code>{
   "name": "blog",
   "version": "1.0.0",
   "scripts": {
@@ -16,32 +96,88 @@
   "dependencies": {
     "encre": "1.0.6"
   }
-}</code></pre><p><strong>...and that's for the build.</strong><h3 id=authoring>Authoring</h3><p>There's nothing very special to know about it. Markdown files will be parsed using <a href=https://www.npmjs.com/package/marked>marked</a>, with metadata extracted from <a href=https://www.npmjs.com/package/gray-matter>gray-matter</a>.<p>Those metadatas only exist to be given to your custom templating functions. There's no mandatory fields or whatsoever.<p>The url of the markdown will be the <code>${filename}.html</code>.<p>As an example, you can create <code>posts/my-first-post.md</code> and write down:<pre><code>---
+}</code></pre>
+<p><strong>...and that's for the build.</strong></p>
+<h3 id="authoring">Authoring</h3>
+<p>There's nothing very special to know about it. Markdown files will be parsed using <a href="https://www.npmjs.com/package/marked">marked</a>, with metadata extracted from <a href="https://www.npmjs.com/package/gray-matter">gray-matter</a>.</p>
+<p>Those metadatas only exist to be given to your custom templating functions. There's no mandatory fields or whatsoever. </p>
+<p>The url of the markdown will be the <code>${filename}.html</code>.</p>
+<p>As an example, you can create <code>posts/my-first-post.md</code> and write down:</p>
+<pre><code>---
 title: My first post!
 ---
-yay \o/</code></pre><h3 id=templating>Templating</h3><p>The two commands <code>draft</code> and <code>write</code> can take exactly one argument, which is the path to a js file made for customization.<p>Let's call it <code>renderers.js</code><p>You can modify your npm scripts accordingly:<pre><code>{
+yay \o/</code></pre>
+<h3 id="templating">Templating</h3>
+<p>The two commands <code>draft</code> and <code>write</code> can take exactly one argument, which is the path to a js file made for customization.</p>
+<p>Let's call it <code>renderers.js</code></p>
+<p>You can modify your npm scripts accordingly:</p>
+<pre><code>{
   "scripts": {
     "serve": "draft renderers.js",
     "build": "write renderers.js",
   }
-}</code></pre><p>Once this is done, your <code>renderers.js</code> file can export few functions to customize the output of your pages.<h4 id=-headdocument-jsdom-metadata-object-void>• head(document: JSDOM, metadata: object): void</h4><p>If you create an expose this function, it will be used as a hook to modify the <code>&lt;head></code> tag of a page. The function receives the full document as a JSDOM object and the metadata collected from gray-matter.<p>As an inspiration, the default function for this renderer is:<pre><code>const head = (document, data = {}) => {
+}</code></pre>
+<p>Once this is done, your <code>renderers.js</code> file can export few functions to customize the output of your pages.</p>
+<h4 id="-headdocument-jsdom-metadata-object-void">• head(document: JSDOM, metadata: object): void</h4>
+<p>If you create an expose this function, it will be used as a hook to modify the <code>&lt;head&gt;</code> tag of a page. The function receives the full document as a JSDOM object and the metadata collected from gray-matter.</p>
+<p>As an inspiration, the default function for this renderer is:</p>
+<pre><code>const head = (document, data = {}) =&gt; {
   const { title = '' } = data
   document.title = title
-}</code></pre><h4 id=-indexdocument-jsom-posts-post-string>• index(document: JSOM, posts: Post[]): string</h4><p>This renderer is dedicated to the list of posts which is in your index file. The document is passed along in case you need to create tags.<p>The post object contains <code>{ data: string, meta: object }</code>, data being the content of your markdown and meta being the metadata from gray-matter.<p>A simple example of customization would be:<pre><code>const index = (_, posts) => (`&lt;ul>
-  ${ posts.map(({ meta }) => (`&lt;li>
-    &lt;a href="${meta.link}">${meta.title}&lt;/a>
-  &lt;/li>`)) }
-&lt;/ul>`)</code></pre><h4 id=-titlemetadata-object-string>• title(metadata: object): string</h4><p>This last customization option allows you to generate the title block of a page from its metadata. It will be injected before the content of the markdown.<p>You could use:<pre><code>const title = ({ title }) => `&lt;h2>${ title }&lt;/h2>`</code></pre><h4 id=putting-it-all-together>Putting it all together</h4><p>In <code>renderers.js</code>:<pre><code>const head = (document, data = {}) => {
+}</code></pre>
+<h4 id="-indexmetadatas-postmetadata-string">• index(metadatas: PostMetadata[]): string</h4>
+<p>This renderer is dedicated to the list of posts which is in your index file.
+The metadata objects contain the metadatas from gray-matter for each post.</p>
+<p>A simple example of customization would be:</p>
+<pre><code>const index = metas =&gt; (`&lt;ul&gt;
+  ${ metas.map(({ link, title }) =&gt; (`&lt;li&gt;
+    &lt;a href="${link}"&gt;${title}&lt;/a&gt;
+  &lt;/li&gt;`)) }
+&lt;/ul&gt;`)</code></pre>
+<h4 id="-titlemetadata-object-string">• title(metadata: object): string</h4>
+<p>This last customization option allows you to generate the title block of a page from its metadata. It will be injected before the content of the markdown.</p>
+<p>You could use:</p>
+<pre><code>const title = ({ title }) =&gt; `&lt;h2&gt;${ title }&lt;/h2&gt;`</code></pre>
+<h4 id="putting-it-all-together">Putting it all together</h4>
+<p>In <code>renderers.js</code>:</p>
+<pre><code>const head = (document, data = {}) =&gt; {
   const { title = '' } = data
   document.title = title
 }
 
-const index = (_, posts) => (`&lt;ul>
-  ${ posts.map(({ meta }) => (`&lt;li>
-    &lt;a href="${meta.link}">${meta.title}&lt;/a>
-  &lt;/li>`)) }
-&lt;/ul>`)
+const index = (_, posts) =&gt; (`&lt;ul&gt;
+  ${ posts.map(({ meta }) =&gt; (`&lt;li&gt;
+    &lt;a href="${meta.link}"&gt;${meta.title}&lt;/a&gt;
+  &lt;/li&gt;`)) }
+&lt;/ul&gt;`)
 
-const title = ({ title }) => `&lt;h2>${ title }&lt;/h2>`
+const title = ({ title }) =&gt; `&lt;h2&gt;${ title }&lt;/h2&gt;`
 
-module.exports = { head, index, title }</code></pre><p><strong>And voila :)</strong><p>Since the index and title function expects you to take data in input and output a string, you can easily decide to <a href=https://fr.reactjs.org/docs/react-dom-server.html>use React and render to string</a> your components (although it feels really overkill).<h3 id=build-optimization>Build optimization</h3><p>The build will output the files in <code>dist/</code>, leaving them for you to minify, bundle or whatever it is you need to do. I personally minify the html with <a href=https://www.npmjs.com/package/html-minifier-terser>html-minifier-terser</a> and css files with <a href=https://cssnano.co/ >cssnano</a> before publishing to github pages with <a href=https://www.npmjs.com/package/gh-pages>gh-pages</a><p>For a complete example, you can check <a href=https://github.com/y-nk/blog/ >the repo which hosts this page on github</a>. Otherwise, <a href=https://github.com/y-nk/encre/ >encre's source code is also available on github</a>.</article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+module.exports = { head, index, title }</code></pre>
+<p><strong>And voila :)</strong></p>
+<p>Since the index and title function expects you to take data in input and output a string, you can easily decide to <a href="https://fr.reactjs.org/docs/react-dom-server.html">use React and render to string</a> your components (although it feels really overkill).</p>
+<h3 id="build-optimization">Build optimization</h3>
+<p>The build will output the files in <code>dist/</code>, leaving them for you to minify, bundle or whatever it is you need to do. I personally minify the html with <a href="https://www.npmjs.com/package/html-minifier-terser">html-minifier-terser</a> and css files with <a href="https://cssnano.co/">cssnano</a> before publishing to github pages with <a href="https://www.npmjs.com/package/gh-pages">gh-pages</a></p>
+<p>For a complete example, you can check <a href="https://github.com/y-nk/blog/">the repo which hosts this page on github</a>.
+Otherwise, <a href="https://github.com/y-nk/encre/">encre's source code is also available on github</a>.</p>
+<h3 id="and-more">And more!</h3>
+<p>This only covers the basics, but know that there's also the support for an atom feed as well as tags. Check the github page for more up to date details!</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

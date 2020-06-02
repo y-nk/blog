@@ -1,39 +1,123 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – Notes about HTML CSS and OOP</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content=article property=og:type><meta content="Julien Barbay"property=article:author><meta content="Notes about HTML CSS and OOP"property=og:title><meta content="CSS as OOP and other thoughts about how to tidy a project"property=description><meta content="CSS as OOP and other thoughts about how to tidy a project"property=og:description><meta content=././notes-about-html-css-and-oop.html property=og:url><meta content=1214924400000 property=article:published_time><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>Notes about HTML CSS and OOP</h2><h6>July 2nd, 2008</h6></hgroup><article><p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer><p>Here are some thoughts about HTML, CSS and JS and how I'm growing to see them.<h3 id=html>HTML</h3><p>There's no big revolution in the way I apprehend HTML. It is and will always remain a semantic markup and nothing more.<p>It's probably a shame but nowadays I can't even recall the last time I saw an HTML page without a CSS linked to it. If we are to import a stylesheet, why bother using tags if we can use divs and spans? Aren't they generic enough to serve most of the purpose? Probably a <code>&lt;a></code> would need Javascript to be properly emulated, but even though it could be done.<p>SEO and others shouldn't really sit on tags, rather on a dedicated set of attribute since it's easy to abuse a tag to be something else than it should anyway, and we'd flatten all tags accross browsers (especially IE&lt;=6). So yeah, why not all <code>&lt;div></code>/<code>&lt;span></code>/(<code>&lt;/a></code>)?<h3 id=css>CSS</h3><p>From most of my time with engineers, I can see CSS being underrated and considered as voodoo rather than something with logic, which it has. They copy/paste, duplicate style, override on override with multiple declaration blocks and overlapping selectors which they don't really care about.<p>It seems to me there's a way to tidy. Class overloading has been to me quite a revelation while learning OOP. At first, I wouldn't <em>really</em> understand but since I've learnt composition and polymorphism through interfaces it really grew to me.<p>Take a simple example of 2 buttons, being green and red.<p>OOP suggests you could create a <code>Button</code> class and make children classes like <code>RedButton</code> and <code>GreenButton</code> ; and if you were willing to add a size effect to it, would you continue and create <code>SmallButton</code>, <code>BigButton</code> and <code>BigRedButton</code>, <code>SmallGreenButton</code> etc? (of course you could make them a property, but let's think Java and that it's more than just a prop)<p>In CSS, the translation would probably be something along:<pre><code>button { border:1px solid black; background: transparent; }
-redbutton { border:1px solid black; background: red; }
-greenbutton { border:1px solid black; background: green; }</code></pre><p>An other way to approach CSS is also to consider class overloading as a way to compose, just like you'd do with interfaces. For my example, then you'd create a class <code>Button</code> and have PrimaryButton which is composed of interface <code>RedBackground</code> (and later <code>BigSize</code>).<pre><code>button { border: 1px solid black; }
-red { background: red; }
-green { background: green; }</code></pre><p>Well, that's it?<p>Thinking this way breaks down CSS properties to the smallest possible unit, making them reusable everywhere and leverage fully the principle of class overloading to start writing style directly from HTML and (completely) stop writing CSS.<p>For the record, with that example, nothing stops me from writing <code>&lt;div class="green" /></code> and that'd be completely fine.<p>With this technique, I use a set of 4 stylesheets which (to me) compose the 4 necessary layers of a style.<h4 id=1-definition-stylesheet>1. Definition stylesheet</h4><p>This stylesheet is mainly to define width, height, margin and padding only. Positions come as a separate spreadsheet, but I'll explain it later.<p>You define the blocks of your websites and how they occupate the screen, and that's pretty much it. It's quite easy to translate from a photoshop/jpg design so it'll be easy to write.<p>This brings me to talk about a small hack that I find quite nice: if you want to define container sizes with padding, you'll notice that padding does change the size, so you'd need to calculate <code>width: real with - padding</code>. Even though, padding would not constraint the content in the block and sometimes the content would <em>push</em> the rest of your page... but it doesn't if you use margins :) So, you can use a <code>.container * { margin-left: 10px }</code> with <code>.container * * { margin-left: 0 }</code> : the first selector will add the corresponding margin to all the children, while the 2nd will stop propagation to further children of the tree. or simply <code>.container > *</code> if your browser supports it.<h4 id=2-positioning-stylesheet>2. Positioning stylesheet</h4><p>With the flow being a bitch, and behaving differently on many browsers, it's quite useful to branch out of the flow when necessary and use a combination of <code>position: relative</code> on the parent and <code>position: absolute</code> on the target to place it as needed by the design. It's breaking the flow, but it's cross-browser proof.<p>With:<pre><code>&lt;body>
-  &lt;div class=”parent”>
-    &lt;div class=”enfant” />
-  &lt;/div>
-&lt;/body>
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
 
-&lt;style>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – Notes about HTML CSS and OOP</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Notes about HTML CSS and OOP"><meta property="description" content="CSS as OOP and other thoughts about how to tidy a project"><meta property="og:description" content="CSS as OOP and other thoughts about how to tidy a project"><meta property="og:url" content="/notes-about-html-css-and-oop.html"><meta property="article:published_time" content="1214924400000"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>Notes about HTML CSS and OOP</h2>
+    <h6>July 2nd, 2008</h6>
+  </hgroup>
+ <article>
+    <p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer></p>
+<p>Here are some thoughts about HTML, CSS and JS and how I'm growing to see them.</p>
+<h3 id="html">HTML</h3>
+<p>There's no big revolution in the way I apprehend HTML. It is and will always remain a semantic markup and nothing more.</p>
+<p>It's probably a shame but nowadays I can't even recall the last time I saw an HTML page without a CSS linked to it. If we are to import a stylesheet, why bother using tags if we can use divs and spans? Aren't they generic enough to serve most of the purpose? Probably a <code>&lt;a&gt;</code> would need Javascript to be properly emulated, but even though it could be done.</p>
+<p>SEO and others shouldn't really sit on tags, rather on a dedicated set of attribute since it's easy to abuse a tag to be something else than it should anyway, and we'd flatten all tags accross browsers (especially IE&lt;=6). So yeah, why not all <code>&lt;div&gt;</code>/<code>&lt;span&gt;</code>/(<code>&lt;/a&gt;</code>)?</p>
+<h3 id="css">CSS</h3>
+<p>From most of my time with engineers, I can see CSS being underrated and considered as voodoo rather than something with logic, which it has. They copy/paste, duplicate style, override on override with multiple declaration blocks and overlapping selectors which they don't really care about.</p>
+<p>It seems to me there's a way to tidy. Class overloading has been to me quite a revelation while learning OOP. At first, I wouldn't <em>really</em> understand but since I've learnt composition and polymorphism through interfaces it really grew to me.</p>
+<p>Take a simple example of 2 buttons, being green and red.</p>
+<p>OOP suggests you could create a <code>Button</code> class and make children classes like <code>RedButton</code> and <code>GreenButton</code> ; and if you were willing to add a size effect to it, would you continue and create <code>SmallButton</code>, <code>BigButton</code> and <code>BigRedButton</code>, <code>SmallGreenButton</code> etc? (of course you could make them a property, but let's think Java and that it's more than just a prop)</p>
+<p>In CSS, the translation would probably be something along:</p>
+<pre><code>button { border:1px solid black; background: transparent; }
+redbutton { border:1px solid black; background: red; }
+greenbutton { border:1px solid black; background: green; }</code></pre>
+<p>An other way to approach CSS is also to consider class overloading as a way to compose, just like you'd do with interfaces. For my example, then you'd create a class <code>Button</code> and have PrimaryButton which is composed of interface <code>RedBackground</code> (and later <code>BigSize</code>).</p>
+<pre><code>button { border: 1px solid black; }
+red { background: red; }
+green { background: green; }</code></pre>
+<p>Well, that's it?</p>
+<p>Thinking this way breaks down CSS properties to the smallest possible unit, making them reusable everywhere and leverage fully the principle of class overloading to start writing style directly from HTML and (completely) stop writing CSS.</p>
+<p>For the record, with that example, nothing stops me from writing <code>&lt;div class="green" /&gt;</code> and that'd be completely fine.</p>
+<p>With this technique, I use a set of 4 stylesheets which (to me) compose the 4 necessary layers of a style.</p>
+<h4 id="1-definition-stylesheet">1. Definition stylesheet</h4>
+<p>This stylesheet is mainly to define width, height, margin and padding only. Positions come as a separate spreadsheet, but I'll explain it later.</p>
+<p>You define the blocks of your websites and how they occupate the screen, and that's pretty much it. It's quite easy to translate from a photoshop/jpg design so it'll be easy to write.</p>
+<p>This brings me to talk about a small hack that I find quite nice: if you want to define container sizes with padding, you'll notice that padding does change the size, so you'd need to calculate <code>width: real with - padding</code>. Even though, padding would not constraint the content in the block and sometimes the content would <em>push</em> the rest of your page... but it doesn't if you use margins :) So, you can use a <code>.container * { margin-left: 10px }</code> with <code>.container * * { margin-left: 0 }</code> : the first selector will add the corresponding margin to all the children, while the 2nd will stop propagation to further children of the tree. or simply <code>.container &gt; *</code> if your browser supports it.</p>
+<h4 id="2-positioning-stylesheet">2. Positioning stylesheet</h4>
+<p>With the flow being a bitch, and behaving differently on many browsers, it's quite useful to branch out of the flow when necessary and use a combination of <code>position: relative</code> on the parent and <code>position: absolute</code> on the target to place it as needed by the design. It's breaking the flow, but it's cross-browser proof.</p>
+<p>With: </p>
+<pre><code>&lt;body&gt;
+  &lt;div class=”parent”&gt;
+    &lt;div class=”enfant” /&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+
+&lt;style&gt;
   body { position:relative; }
   .parent { position:absolute; }
   .enfant { position:absolute; top:5px; left:5px; }
-&lt;/style></code></pre><p>Everything is about parenting. By adding <code>position: relative</code> to the <code>&lt;body /></code> we ensure at least all absolute children will have an origin point which is the top left of the window.<p>Having this propagated to other nodes, we move the origin point of nodes' children as the node's own position. Just like that we have a simple-to-master 2D coordinate system which do not bitch around like float or whatever. It's worth noticing that using this way, we can use the <code>top/right/bottom/left</code> for dimensions rather than <code>width/height</code> as well, since it's a way to define implicity fluid dimensions by constraint. Even though nobody uses that anymore...<h4 id=3-styling>3. Styling</h4><p>Until here, bounding boxes only were defined. I work with UX designers and we do wireframing a lot, and they like that I can deliver a cross-browser skeleton page without design, so it's a bonus.<p>This one adds the design and it oriented towards "the smallest meaningful block of style you can reuse". If it's a single property, let's do it. If it's bigger, it's equally good. Basically, all <code>background</code>, <code>borders</code> will go there. Nothing related to font though.<h4 id=4-fonts>4. Fonts</h4><p>I feel like the split of 3. and 4. could be optional, but I do recommend it anyway. There are classes for titles, subtitles, paragraphs etc. Basically, <code>.h1</code>, <code>.h2</code>, <code>.p</code> but in a design sensitive way.<hr><p>With the use of those 4 spreadsheets, we can define a single meaningful property to be reused in html, while also being capable of defining design oriented blocks clean.<p>From experience, designers usually come to ask "can you change the titles color?" or "can you move this block to the left by 1px? and this one by 5px?" so splitting the stylesheet this way makes sense.<p>I also found that blocks are usually implicit within a context. You could have a product which has different representation in the cart of a e-commerce website, or in a list, or in a carousel.<p>It becomes quickly unbearable to find class names for those, like <code>.CartProduct</code>, <code>.ListProduct</code> or <code>.CarouselProduct</code>, so why not contextualize with selectors instead and abstract the common properties, so we can factorize some CSS on the way?<pre><code>&lt;div class=”module cart”>
-  &lt;div class=”product” />
-&lt;div/>
+&lt;/style&gt;</code></pre>
+<p>Everything is about parenting. By adding <code>position: relative</code> to the <code>&lt;body /&gt;</code> we ensure at least all absolute children will have an origin point which is the top left of the window.</p>
+<p>Having this propagated to other nodes, we move the origin point of nodes' children as the node's own position. Just like that we have a simple-to-master 2D coordinate system which do not bitch around like float or whatever. It's worth noticing that using this way, we can use the <code>top/right/bottom/left</code> for dimensions rather than <code>width/height</code> as well, since it's a way to define implicity fluid dimensions by constraint. Even though nobody uses that anymore...</p>
+<h4 id="3-styling">3. Styling</h4>
+<p>Until here, bounding boxes only were defined. I work with UX designers and we do wireframing a lot, and they like that I can deliver a cross-browser skeleton page without design, so it's a bonus. </p>
+<p>This one adds the design and it oriented towards "the smallest meaningful block of style you can reuse". If it's a single property, let's do it. If it's bigger, it's equally good. Basically, all <code>background</code>, <code>borders</code> will go there. Nothing related to font though.</p>
+<h4 id="4-fonts">4. Fonts</h4>
+<p>I feel like the split of 3. and 4. could be optional, but I do recommend it anyway. There are classes for titles, subtitles, paragraphs etc. Basically, <code>.h1</code>, <code>.h2</code>, <code>.p</code> but in a design sensitive way.</p>
+<hr>
+<p>With the use of those 4 spreadsheets, we can define a single meaningful property to be reused in html, while also being capable of defining design oriented blocks clean.</p>
+<p>From experience, designers usually come to ask "can you change the titles color?" or "can you move this block to the left by 1px? and this one by 5px?" so splitting the stylesheet this way makes sense.</p>
+<p>I also found that blocks are usually implicit within a context. You could have a product which has different representation in the cart of a e-commerce website, or in a list, or in a carousel.</p>
+<p>It becomes quickly unbearable to find class names for those, like <code>.CartProduct</code>, <code>.ListProduct</code> or <code>.CarouselProduct</code>, so why not contextualize with selectors instead and abstract the common properties, so we can factorize some CSS on the way?</p>
+<pre><code>&lt;div class=”module cart”&gt;
+  &lt;div class=”product” /&gt;
+&lt;div/&gt;
 
-&lt;div class=”module list”>
-  &lt;div class=”product” />
-  &lt;div class=”product” />
-  &lt;div class=”product” />
-&lt;/div>
+&lt;div class=”module list”&gt;
+  &lt;div class=”product” /&gt;
+  &lt;div class=”product” /&gt;
+  &lt;div class=”product” /&gt;
+&lt;/div&gt;
 
-&lt;div class=”module carousel”>
-  &lt;div class=”product” />
-&lt;/div>
+&lt;div class=”module carousel”&gt;
+  &lt;div class=”product” /&gt;
+&lt;/div&gt;
 
-&lt;style>
+&lt;style&gt;
   .module { /* module common properties */ }
   .product { /* product common properties */ }
 
   .module.cart .product { /* product properties for within the cart only */ }
   .module.list .product { /* product properties for within a list only */ }
   .module.carousel .product { /* product properties for within a carousel only */ }
-&lt;/style></code></pre><p>This ensures strict selectors with meaningful paths, but still does not over define selectors in a way which could be cumbersome. It's the perfect balance between too strict and too shallow which allows to take advantage of class overloading.<h3 id=js>JS</h3><p>There's nothing really special related to JavaScript, at least that I understand of right now. I only think useful to share a few functions I wrote to manipulate the classes which come along the big talk on CSS :)<pre><code>function hasClass(ele, cls) {
+&lt;/style&gt;</code></pre>
+<p>This ensures strict selectors with meaningful paths, but still does not over define selectors in a way which could be cumbersome. It's the perfect balance between too strict and too shallow which allows to take advantage of class overloading. </p>
+<h3 id="js">JS</h3>
+<p>There's nothing really special related to JavaScript, at least that I understand of right now. I only think useful to share a few functions I wrote to manipulate the classes which come along the big talk on CSS :)</p>
+<pre><code>function hasClass(ele, cls) {
   if (ele.className != undefined) {
     // 2020 EDIT: why didn't i think of className.indexOf(cls) !== -1 ?
     return ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
@@ -76,4 +160,25 @@ function getElementsByClassName(root, cls) {
   }
 
   return returnElements;
-}</code></pre><p>With that, we can create and think of behaviors such as mouseenter/mouseleave toggling a <code>.hover</code> class, or targeting <code>.link</code> to add a navigation behavior onclick.<p>I hope these views helped you to understand more about the way I code and the way you should code too. It allows to get rid of browser differences and flow related bugs by sticking to the basics of generic tags while leveraging power of css overloading to compensate for the loss, and javascript to the rescue to support the things we miss.</article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+}</code></pre>
+<p>With that, we can create and think of behaviors such as mouseenter/mouseleave toggling a <code>.hover</code> class, or targeting <code>.link</code> to add a navigation behavior onclick.</p>
+<p>I hope these views helped you to understand more about the way I code and the way you should code too. It allows to get rid of browser differences and flow related bugs by sticking to the basics of generic tags while leveraging power of css overloading to compensate for the loss, and javascript to the rescue to support the things we miss.</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

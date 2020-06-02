@@ -1,1 +1,144 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><body class=index><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><ul class=posts><li class=post><h2><time>May 29th, 2020</time> <a href=./encre-a-minimal-blog-engine.html>Encre, a minimal blog engine</a></h2><p>Build your blog in seconds, customize in minutes.<li class=post><h2><time>January 30th, 2020</time> <a href=./a-tale-of-politeness.html>A tale of politeness</a></h2><p>I'm quitting LINE. Here's why.<li class=post><h2><time>November 23rd, 2019</time> <a href=./frontend-used-to-be-fun.html>Frontend used to be fun</a></h2><p>An opinionated 10 years retrospective of the evolving landscape of frontend technologies.<li class=post><h2><time>June 17th, 2016</time> <a href=./technology-as-a-design-material.html>Technology as a design material</a></h2><p>A piece of research on how we can perceive technology as a part of the design process.<li class=post><h2><time>May 1st, 2014</time> <a href=./i-moved-to-india.html>I moved to India</a></h2><p>The adventure of coding in a different culture<li class=post><h2><time>October 4th, 2012</time> <a href=./html-should-be-meaningful.html>HTML should be meaningful</a></h2><p>Thoughts on the evolution of my POV on HTML and CSS<li class=post><h2><time>October 4th, 2012</time> <a href=./the-power-of-flash-in-illustrator.html>The power of Flash in Illustrator… at most!</a></h2><p>Tips around using Adobe PatchPanel to enhance Illustrator CS3 authoring experience<li class=post><h2><time>September 6th, 2012</time> <a href=./pushover-dot-net-and-notifications.html>pushover.net and notifications</a></h2><p>Get to know who's trying to use your VPN<li class=post><h2><time>November 14th, 2011</time> <a href=./martian-sta7es-a-state-machine-package.html>martian.sta7es, a state machine package</a></h2><p>Deepdive into the routing system of my AS3 library<li class=post><h2><time>November 12th, 2011</time> <a href=./martian-t1me-a-sequencing-package.html>martian.t1me, a sequencing package</a></h2><p>A library about asynchronous task managment in AS3<li class=post><h2><time>November 7th, 2011</time> <a href=./the-discovery-of-c-sharp.html>The discovery of C-Sharp</a></h2><p>Debriefing on lessons learnt while learning a new language<li class=post><h2><time>October 11th, 2011</time> <a href=./deeplinking-in-html5.html>Deeplinking with HTML5</a></h2><p>What is deeplinking? How does it work?<li class=post><h2><time>September 16th, 2011</time> <a href=./understanding-mvc.html>Understanding MVC</a></h2><p>The journey through building a small MVC framework<li class=post><h2><time>July 25th, 2011</time> <a href=./dynamic-alpha.html>Dynamic alpha</a></h2><p>Observations on obstruction of background and what we can do about it<li class=post><h2><time>April 9th, 2009</time> <a href=./flar-and-papervision.html>FLAR + PV3D = ?</a></h2><p>Fixes and trials of the combination of Papervsion and FLAR for AR experiences in Flash<li class=post><h2><time>July 2nd, 2008</time> <a href=./notes-about-html-css-and-oop.html>Notes about HTML CSS and OOP</a></h2><p>CSS as OOP and other thoughts about how to tidy a project</ul></section><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+  </head>
+
+  <body class="index">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <!--section id="introduction">
+    </section-->
+
+    <section id="main"><ul class="posts"><li class="post">
+  <h2>
+    <time>June 3rd, 2020</time>
+    <a href="encre-a-minimal-blog-engine.html">Encre, a minimal blog engine</a>
+  </h2>
+  <p>Build your blog in seconds, customize in minutes.</p>
+</li><li class="post">
+  <h2>
+    <time>January 30th, 2020</time>
+    <a href="a-tale-of-politeness.html">A tale of politeness</a>
+  </h2>
+  <p>I'm quitting LINE. Here's why.</p>
+</li><li class="post">
+  <h2>
+    <time>November 23rd, 2019</time>
+    <a href="frontend-used-to-be-fun.html">Frontend used to be fun</a>
+  </h2>
+  <p>An opinionated 10 years retrospective of the evolving landscape of frontend technologies.</p>
+</li><li class="post">
+  <h2>
+    <time>June 17th, 2016</time>
+    <a href="technology-as-a-design-material.html">Technology as a design material</a>
+  </h2>
+  <p>A piece of research on how we can perceive technology as a part of the design process.</p>
+</li><li class="post">
+  <h2>
+    <time>May 1st, 2014</time>
+    <a href="i-moved-to-india.html">I moved to India</a>
+  </h2>
+  <p>The adventure of coding in a different culture</p>
+</li><li class="post">
+  <h2>
+    <time>October 4th, 2012</time>
+    <a href="html-should-be-meaningful.html">HTML should be meaningful</a>
+  </h2>
+  <p>Thoughts on the evolution of my POV on HTML and CSS</p>
+</li><li class="post">
+  <h2>
+    <time>October 4th, 2012</time>
+    <a href="the-power-of-flash-in-illustrator.html">The power of Flash in Illustrator… at most!</a>
+  </h2>
+  <p>Tips around using Adobe PatchPanel to enhance Illustrator CS3 authoring experience</p>
+</li><li class="post">
+  <h2>
+    <time>September 6th, 2012</time>
+    <a href="pushover-dot-net-and-notifications.html">pushover.net and notifications</a>
+  </h2>
+  <p>Get to know who's trying to use your VPN</p>
+</li><li class="post">
+  <h2>
+    <time>November 14th, 2011</time>
+    <a href="martian-sta7es-a-state-machine-package.html">martian.sta7es, a state machine package</a>
+  </h2>
+  <p>Deepdive into the routing system of my AS3 library</p>
+</li><li class="post">
+  <h2>
+    <time>November 12th, 2011</time>
+    <a href="martian-t1me-a-sequencing-package.html">martian.t1me, a sequencing package</a>
+  </h2>
+  <p>A library about asynchronous task managment in AS3</p>
+</li><li class="post">
+  <h2>
+    <time>November 7th, 2011</time>
+    <a href="the-discovery-of-c-sharp.html">The discovery of C-Sharp</a>
+  </h2>
+  <p>Debriefing on lessons learnt while learning a new language</p>
+</li><li class="post">
+  <h2>
+    <time>October 11th, 2011</time>
+    <a href="deeplinking-in-html5.html">Deeplinking with HTML5</a>
+  </h2>
+  <p>What is deeplinking? How does it work?</p>
+</li><li class="post">
+  <h2>
+    <time>September 16th, 2011</time>
+    <a href="understanding-mvc.html">Understanding MVC</a>
+  </h2>
+  <p>The journey through building a small MVC framework</p>
+</li><li class="post">
+  <h2>
+    <time>July 25th, 2011</time>
+    <a href="dynamic-alpha.html">Dynamic alpha</a>
+  </h2>
+  <p>Observations on obstruction of background and what we can do about it</p>
+</li><li class="post">
+  <h2>
+    <time>April 9th, 2009</time>
+    <a href="flar-and-papervision.html">FLAR + PV3D = ?</a>
+  </h2>
+  <p>Fixes and trials of the combination of Papervsion and FLAR for AR experiences in Flash</p>
+</li><li class="post">
+  <h2>
+    <time>July 2nd, 2008</time>
+    <a href="notes-about-html-css-and-oop.html">Notes about HTML CSS and OOP</a>
+  </h2>
+  <p>CSS as OOP and other thoughts about how to tidy a project</p>
+</li></ul></section>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

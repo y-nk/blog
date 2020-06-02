@@ -1,9 +1,62 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – pushover.net and notifications</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content=article property=og:type><meta content="Julien Barbay"property=article:author><meta content="pushover.net and notifications"property=og:title><meta content="Get to know who's trying to use your VPN"property=description><meta content="Get to know who's trying to use your VPN"property=og:description><meta content=././pushover-dot-net-and-notifications.html property=og:url><meta content=1346857200000 property=article:published_time><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>pushover.net and notifications</h2><h6>September 6th, 2012</h6></hgroup><article><p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer><p>Recently i’ve been trying to set up a web server at home. I've also set-up a private vpn (to access some NAS) and am a little concerned about being poked around so I was wondering if it was possible for me to be notified of any kind of harassment on my vpn port.<p>I discovered pushover, a push notification service which is free for receivers and also free for senders at with a rate limit of 7500 messages/month. It looked perfect since the android app is cheap (~1€), and i could create a personal application that would easy fit in this 7500 messages per month free plan.<h3 id=monitoring-connections>Monitoring connections</h3><p>The vpn server is running on a Linksys WRT54G router flash with a DDWRT firmware. After configured the vpn server with the highest log level possible, it was possible to monitor the log file to see if a new connection was made with some shell.<pre><code>$ tail /var/log/messages
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – pushover.net and notifications</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="pushover.net and notifications"><meta property="description" content="Get to know who's trying to use your VPN"><meta property="og:description" content="Get to know who's trying to use your VPN"><meta property="og:url" content="/pushover-dot-net-and-notifications.html"><meta property="article:published_time" content="1346857200000"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>pushover.net and notifications</h2>
+    <h6>September 6th, 2012</h6>
+  </hgroup>
+ <article>
+    <p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer></p>
+<p>Recently i’ve been trying to set up a web server at home. I've also set-up a private vpn (to access some NAS) and am a little concerned about being poked around so I was wondering if it was possible for me to be notified of any kind of harassment on my vpn port.</p>
+<p>I discovered pushover, a push notification service which is free for receivers and also free for senders at with a rate limit of 7500 messages/month. It looked perfect since the android app is cheap (~1€), and i could create a personal application that would easy fit in this 7500 messages per month free plan.</p>
+<h3 id="monitoring-connections">Monitoring connections</h3>
+<p>The vpn server is running on a Linksys WRT54G router flash with a DDWRT firmware.
+After configured the vpn server with the highest log level possible, it was possible to monitor the log file to see if a new connection was made with some shell.</p>
+<pre><code>$ tail /var/log/messages
 
 Sep  6 04:43:57 router daemon.info [21643]: CTRL: Client XXX.XXX.XXX.XXX control connection started
-Sep  6 04:43:57 router daemon.info [21643]: CTRL: Client XXX.XXX.XXX.XXX control connection finished</code></pre><p>I then used <code>awk</code> to filter out the logs, and put it in a simple loop to call pushover whenever a new line was added to the log<pre><code>tail -f /var/log/messages | awk '/CTRL: Client/ { print $9"-"$12 }' | while read -r args; do
+Sep  6 04:43:57 router daemon.info [21643]: CTRL: Client XXX.XXX.XXX.XXX control connection finished</code></pre>
+<p>I then used <code>awk</code> to filter out the logs, and put it in a simple loop to call pushover whenever a new line was added to the log</p>
+<pre><code>tail -f /var/log/messages | awk '/CTRL: Client/ { print $9"-"$12 }' | while read -r args; do
   wget "http://129.168.0.XXX:8080/someProxyToPushover.php?arguments=vpn-$args";
-done</code></pre><p>So now, anytime a new line appears into the log file, it will be monitored by <code>tail</code>, evaluated by <code>awk</code>, and if it matches, <code>wget</code> will call the webservice with the ip and the status of the connection.<h3 id=calling-pushover>Calling pushover</h3><p>Here’s a small script i first crafted. I takes the full example from pushover’s index page, with a small parser before.<pre><code>&lt;?php
+done</code></pre>
+<p>So now, anytime a new line appears into the log file, it will be monitored by <code>tail</code>, evaluated by <code>awk</code>, and if it matches, <code>wget</code> will call the webservice with the ip and the status of the connection.</p>
+<h3 id="calling-pushover">Calling pushover</h3>
+<p>Here’s a small script i first crafted. I takes the full example from pushover’s index page, with a small parser before.</p>
+<pre><code>&lt;?php
   $split = explode("-", $_GET["arguments"]);
   $message = "";
 
@@ -18,11 +71,11 @@ done</code></pre><p>So now, anytime a new line appears into the log file, it wil
 
   curl_setopt_array (
     $curl = curl_init(), array (
-      CURLOPT_URL => "https://api.pushover.net/1/messages.json",
-      CURLOPT_POSTFIELDS => array (
-        "token" => "APP_SECRET",
-        "user" => "USER_SECRET",
-        "message" => $message,
+      CURLOPT_URL =&gt; "https://api.pushover.net/1/messages.json",
+      CURLOPT_POSTFIELDS =&gt; array (
+        "token" =&gt; "APP_SECRET",
+        "user" =&gt; "USER_SECRET",
+        "message" =&gt; $message,
       )
     )
   );
@@ -31,7 +84,10 @@ done</code></pre><p>So now, anytime a new line appears into the log file, it wil
   curl_close($curl);
 
   die('');
-?></code></pre><p>I wanted to fancy it a little, so i decided to crawl a country-to-ip website that would display the country and the city of the ip, so i could have more infos about who’s connected. I modified the vpn case that way:<pre><code>case "vpn":
+?&gt;</code></pre>
+<p>I wanted to fancy it a little, so i decided to crawl a country-to-ip website that would display the country and the city of the ip, so i could have more infos about who’s connected.
+I modified the vpn case that way:</p>
+<pre><code>case "vpn":
     $ip = $split[1];
     $status = $split[2];
 
@@ -51,8 +107,33 @@ done</code></pre><p>So now, anytime a new line appears into the log file, it wil
     require_once("html.php");
 
     $html = str_get_html($data);
-    $country = $html->find("table", 1)->find("td", 0)->text();
-    $city = $html->find("table", 1)->find("td", 2)->text();
+    $country = $html-&gt;find("table", 1)-&gt;find("td", 0)-&gt;text();
+    $city = $html-&gt;find("table", 1)-&gt;find("td", 2)-&gt;text();
 
     $message = "Connection ".$status." from ".$ip." (".trim($country).", ".trim($city).")";
-    break;</code></pre><p>I added the shell script part is to the startup from the WebUI of DDWRT.<p>Thanks a lot to Danetag for staying late at night, helping me with testing from Vancouver :)<p>Btw, I know the regex in <code>awk</code> is not perfect since it monitors only a successfull connection from the vpn. I could also have made an <a href=http://www.delafond.org/traducmanfr/man/man8/iptables.8.html>iptables</a> rule to monitor any connection, and adapt the awk regex.<pre><code>iptables -t nat -I PREROUTING -p tcp --dport $VPNPORT -j LOG --log-prefix=VPNTICKLE</code></pre><p>It was just easier this way :)</article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+    break;</code></pre>
+<p>I added the shell script part is to the startup from the WebUI of DDWRT.</p>
+<p>Thanks a lot to Danetag for staying late at night, helping me with testing from Vancouver :)</p>
+<p>Btw, I know the regex in <code>awk</code> is not perfect since it monitors only a successfull connection from the vpn.
+I could also have made an <a href="http://www.delafond.org/traducmanfr/man/man8/iptables.8.html">iptables</a> rule to monitor any connection, and adapt the awk regex.</p>
+<pre><code>iptables -t nat -I PREROUTING -p tcp --dport $VPNPORT -j LOG --log-prefix=VPNTICKLE</code></pre>
+<p>It was just easier this way :)</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

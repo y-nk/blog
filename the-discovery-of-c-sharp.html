@@ -1,22 +1,82 @@
-<!doctypehtml><html lang=en><meta content="Julien Barbay"name=author><meta content=@y_nk name=twitter:creator><meta content=summary name=twitter:card><meta charset=utf-8><meta content="IE=edge"http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1"name=viewport><title>y_nk – The discovery of C-Sharp</title><link href=./style.css rel=stylesheet><link href=./favicon.svg rel=icon type=image/svg+xml><link href=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css rel=stylesheet><script src=//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js></script><script>hljs.initHighlightingOnLoad()</script><meta content=article property=og:type><meta content="Julien Barbay"property=article:author><meta content="The discovery of C-Sharp"property=og:title><meta content="Debriefing on lessons learnt while learning a new language"property=description><meta content="Debriefing on lessons learnt while learning a new language"property=og:description><meta content=././the-discovery-of-c-sharp.html property=og:url><meta content=1320591600000 property=article:published_time><body class=post><header><h1><a href=./ ><svg id=y_nk viewBox="0 0 100 65"><polygon class=bk points="10.1,0 20.3,10.1 0,10.1"></polygon><polygon class=ft points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon><polygon class=bk points="35.6,10.1 45.8,20.3 45.8,0"></polygon><polygon class=ft points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon><polygon class=bk points="89.9,0 79.7,10.1 100,10.1"></polygon><polygon class=ft points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon><polygon class=bk points="100,54.4 89.9,44.3 89.9,64.6"></polygon></svg></a></h1></header><section id=main><hgroup><h2>The discovery of C-Sharp</h2><h6>November 7th, 2011</h6></hgroup><article><p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer><p>I’m proud to say i’ve finished a <a href=http://lesabonnesfontcourt.com/ >cool website</a> with a gifted artistic director known as <a href=http://cargocollective.com/urbanplastic>urbanplastic</a>. My current company having only IIS Servers, it was decided to build it in C# and so I had to adapt since I was coding backend and <em>frontend</em> (is that a word?)<h3 id=the-good>The good</h3><p>List of the good things I found in C#. It's worth nothing that all of these points will seem trivial for C# devs, but trust me that you don't know what it is to work with php (or maybe you do and that's why you changed to C#).<p>1- <strong>Bracket-based object initializators</strong>. After typing new and your class name, add {} and define some of its property.<pre><code>SomeObject obj = new SomeObject() {
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – The discovery of C-Sharp</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="The discovery of C-Sharp"><meta property="description" content="Debriefing on lessons learnt while learning a new language"><meta property="og:description" content="Debriefing on lessons learnt while learning a new language"><meta property="og:url" content="/the-discovery-of-c-sharp.html"><meta property="article:published_time" content="1320591600000"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>The discovery of C-Sharp</h2>
+    <h6>November 7th, 2011</h6>
+  </hgroup>
+ <article>
+    <p><disclaimer>The original article has been retrieved from the internet archive machine and edited for fluidity.</disclaimer></p>
+<p>I’m proud to say i’ve finished a <a href="http://lesabonnesfontcourt.com/">cool website</a> with a gifted artistic director known as <a href="http://cargocollective.com/urbanplastic">urbanplastic</a>. My current company having only IIS Servers, it was decided to build it in C# and so I had to adapt since I was coding backend and <em>frontend</em> (is that a word?)</p>
+<h3 id="the-good">The good</h3>
+<p>List of the good things I found in C#. It's worth nothing that all of these points will seem trivial for C# devs, but trust me that you don't know what it is to work with php (or maybe you do and that's why you changed to C#).</p>
+<p>1- <strong>Bracket-based object initializators</strong>. After typing new and your class name, add {} and define some of its property.</p>
+<pre><code>SomeObject obj = new SomeObject() {
   someProp1 = "foo"
   someProp2 = "bar"
-}</code></pre><p>2- This fucking awesome technology which is <strong>the lamdba expression system</strong>. It a kind of inline delegation declaration system, but strongly typed and highly flexible. I still don’t get <em>all</em> the power of it but damn this is good! It's like a javascript callback, but without gibberish syntax around.<p>in JS:<pre><code>var strings = ['My', 'rAnDomlY', 'caSEd', 'sTRInG'];
+}</code></pre>
+<p>2- This fucking awesome technology which is <strong>the lamdba expression system</strong>. It a kind of inline delegation declaration system, but strongly typed and highly flexible. I still don’t get <em>all</em> the power of it but damn this is good! It's like a javascript callback, but without gibberish syntax around.</p>
+<p>in JS:</p>
+<pre><code>var strings = ['My', 'rAnDomlY', 'caSEd', 'sTRInG'];
 
 for (var i = 0; i &lt; strings.length; i++)
-  strings[i] = strings[i].toUpperCase();</code></pre><p>C# Lambda made:<pre><code>List&lt;String> strings = new List&lt;String>{ "My", "rAnDomlY", "caSEd", "sTRInG" };
-strings.ConvertAll(i => i.ToLower()); // "i" is typed as String! </code></pre><p>It’s <strong>D.A.M.N cool.</strong><p>3- <strong>Linq</strong>, which is also an amazing thing. A strongly typed ORM is something I never worked with before. I didn’t had to use it directly because I wasn’t involved in the database design and its related queries, but I’ve been seduced by the clarity of it. The way of chaining maps, filters and sorting is truely something inspiring. Best thing is to have a look on an introduction to Linq <a href=http://msdn.microsoft.com/en-us/library/bb397906.aspx>there</a><h3 id=the-bad>The bad</h3><p>Saying that, i feel some cons. Most of the time, shortcuts like Lambda and so on are decreasing the time of development ; sometimes, a strongly typed language can be long and fastidious (hear me, Java).<p>Have a look at this PHP Post request:<pre><code>$c = curl_init();
+  strings[i] = strings[i].toUpperCase();</code></pre>
+<p>C# Lambda made:</p>
+<pre><code>List&lt;String&gt; strings = new List&lt;String&gt;{ "My", "rAnDomlY", "caSEd", "sTRInG" };
+strings.ConvertAll(i =&gt; i.ToLower()); // "i" is typed as String! </code></pre>
+<p>It’s <strong>D.A.M.N cool.</strong></p>
+<p>3- <strong>Linq</strong>, which is also an amazing thing. A strongly typed ORM is something I never worked with before. I didn’t had to use it directly because I wasn’t involved in the database design and its related queries, but I’ve been seduced by the clarity of it. The way of chaining maps, filters and sorting is truely something inspiring. Best thing is to have a look on an introduction to Linq <a href="http://msdn.microsoft.com/en-us/library/bb397906.aspx">there</a></p>
+<h3 id="the-bad">The bad</h3>
+<p>Saying that, i feel some cons. Most of the time, shortcuts like Lambda and so on are decreasing the time of development ; sometimes, a strongly typed language can be long and fastidious (hear me, Java).</p>
+<p>Have a look at this PHP Post request:</p>
+<pre><code>$c = curl_init();
 curl_setopt($c, CURLOPT_URL, "http://some.distant.url");
 curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($c, CURLOPT_HEADER, false);
 curl_setopt($c, CURLOPT_POST, true);
-curl_setopt($c, CURLOPT_POSTFIELDS, array('param0' => 'value0','param1' => 'value1'));
+curl_setopt($c, CURLOPT_POSTFIELDS, array('param0' =&gt; 'value0','param1' =&gt; 'value1'));
 $output = curl_exec($c);
 var_dump($output);
-curl_close($c);</code></pre><p>See how easy it is ? I’m sure it can even be shorter quite easily.<p>Same in C#:<pre><code>WebRequest request = WebRequest.Create ("http://some.distant.url");
+curl_close($c);</code></pre>
+<p>See how easy it is ? I’m sure it can even be shorter quite easily.  </p>
+<p>Same in C#:  </p>
+<pre><code>WebRequest request = WebRequest.Create ("http://some.distant.url");
 request.Method = "POST";
 
-string postData = "param0=value0&ampparam1=value1"; // there aren't encoded magically
+string postData = "param0=value0&amp;param1=value1"; // there aren't encoded magically
 byte[] byteArray = Encoding.UTF8.GetBytes(postData);
 
 request.ContentType = "application/x-www-form-urlencoded";
@@ -38,4 +98,33 @@ Console.WriteLine(responseFromServer);
 
 reader.Close();
 dataStream.Close();
-response.Close();</code></pre><p>Do you get it?<p>Otherwise, it’s not a big deal... as long as you're on Windows. Visual Studio is the smartest IDE i ever seen so far, tons of features, and a great memory management. I recognize more than ever FlashDevelop’s influences now :)<h3 id=the-ugly>The ugly</h3><p>There's no ugly, c'mon :)<h3 id=i-worked-with-the-net-mvc-framework>I worked with the .NET MVC framework</h3><p>It’s also a great tool and well designed, with simplicity in mind. Although, there’s nothing special around it when you know how great are tools like the Zend Framework or Symfony.<p>By the way, one of its very good feature is its templating engine, named Razor. It’s pretty simple and all the calls are easily findable since they’re prefixed with an <code>@</code>. You can even type strong C# embedded in a <code>@{}</code> block. I didn't feel so impressed at first as it’s not something new for php devs since there are dozen of templating engines out there, but it's apparently a very good improvement since the last version (according to C# devs).<p>I also loved of the routing system of MVC. I had to deal with it very deeply with it and since I had needs like regex and custom validation on urls, I appreciated how simple it is to manage those in a single line of code.<hr><p>I took a big look and adapted some concepts in my own AS3 library. More to come on this soon ;)</article></section><footer><a href=./ class=!>← back</a></footer><script>const colors=["blue","cornflowerblue","darkorange","darkturquoise","deepskyblue","dodgerblue","gold","goldenrod","indigo","lightcoral","lightgreen","lightpink","lightseagreen","lightskyblue","lightslategray","limegreen","mediumaquamarine","mediumblue","mediumspringgreen","midnightblue","moccasin","navajowhite","orange","orangered","palegreen","paleturquoise","pink","rebeccapurple","royalblue","salmon","sandybrown","seagreen","skyblue","springgreen","steelblue","teal","tomato"];document.body.style.setProperty("--accent",colors[Math.floor(Math.random()*colors.length)])</script>
+response.Close();</code></pre>
+<p>Do you get it?</p>
+<p>Otherwise, it’s not a big deal... as long as you're on Windows. Visual Studio is the smartest IDE i ever seen so far, tons of features, and a great memory management. I recognize more than ever FlashDevelop’s influences now :) </p>
+<h3 id="the-ugly">The ugly</h3>
+<p>There's no ugly, c'mon :)</p>
+<h3 id="i-worked-with-the-net-mvc-framework">I worked with the .NET MVC framework</h3>
+<p>It’s also a great tool and well designed, with simplicity in mind. Although, there’s nothing special around it when you know how great are tools like the Zend Framework or Symfony.</p>
+<p>By the way, one of its very good feature is its templating engine, named Razor. It’s pretty simple and all the calls are easily findable since they’re prefixed with an <code>@</code>. You can even type strong C# embedded in a <code>@{}</code> block. I didn't feel so impressed at first as it’s not something new for php devs since there are dozen of templating engines out there, but it's apparently a very good improvement since the last version (according to C# devs).</p>
+<p>I also loved of the routing system of MVC. I had to deal with it very deeply with it and since I had needs like regex and custom validation on urls, I appreciated how simple it is to manage those in a single line of code.</p>
+<hr>
+<p>I took a big look and adapted some concepts in my own AS3 library. More to come on this soon ;)</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>
