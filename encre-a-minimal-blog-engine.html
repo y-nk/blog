@@ -145,9 +145,9 @@ The metadata objects contain the metadatas from gray-matter for each post.</p>
   document.title = title
 }
 
-const index = (_, posts) =&gt; (`&lt;ul&gt;
-  ${ posts.map(({ meta }) =&gt; (`&lt;li&gt;
-    &lt;a href="${meta.link}"&gt;${meta.title}&lt;/a&gt;
+const index = metas =&gt; (`&lt;ul&gt;
+  ${ metas.map(({ link, title }) =&gt; (`&lt;li&gt;
+    &lt;a href="${link}"&gt;${title}&lt;/a&gt;
   &lt;/li&gt;`)) }
 &lt;/ul&gt;`)
 
@@ -157,9 +157,9 @@ module.exports = { head, index, title }</code></pre>
 <p><strong>And voila :)</strong></p>
 <p>Since the index and title function expects you to take data in input and output a string, you can easily decide to <a href="https://fr.reactjs.org/docs/react-dom-server.html">use React and render to string</a> your components (although it feels really overkill).</p>
 <h3 id="build-optimization">Build optimization</h3>
-<p>The build will output the files in <code>dist/</code>, leaving them for you to minify, bundle or whatever it is you need to do. I personally minify the html with <a href="https://www.npmjs.com/package/html-minifier-terser">html-minifier-terser</a> and css files with <a href="https://cssnano.co/">cssnano</a> before publishing to github pages with <a href="https://www.npmjs.com/package/gh-pages">gh-pages</a></p>
-<p>For a complete example, you can check <a href="https://github.com/y-nk/blog/">the repo which hosts this page on github</a>.
-Otherwise, <a href="https://github.com/y-nk/encre/">encre's source code is also available on github</a>.</p>
+<p>The build will output the files in <code>dist/</code>, leaving them for you to minify, bundle or whatever it is you need to do.</p>
+<p>I personally minify the html with <a href="https://www.npmjs.com/package/html-minifier-terser">html-minifier-terser</a> and css files with <a href="https://cssnano.co/">cssnano</a> before publishing to github pages with <a href="https://www.npmjs.com/package/gh-pages">gh-pages</a></p>
+<p>For a complete example, you can check <a href="https://github.com/y-nk/blog/">the repo which hosts this page on github</a>. Otherwise, <a href="https://github.com/y-nk/encre/">encre's source code is also available on github</a>.</p>
 <h3 id="and-more">And more!</h3>
 <p>This only covers the basics, but know that there's also the support for an atom feed as well as tags. Check the github page for more up to date details!</p>
 
