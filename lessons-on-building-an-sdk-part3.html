@@ -1,0 +1,360 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – Lessons on building an SDK (part3)</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Lessons on building an SDK (part3)"><meta property="description" content="Concerns and primary goals while coding a library"><meta property="og:description" content="Concerns and primary goals while coding a library"><meta property="og:url" content="/lessons-on-building-an-sdk-part3.html"><meta property="article:published_time" content="1591228800002"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>Lessons on building an SDK (part3)</h2>
+    <h6>June 4th, 2020</h6>
+  </hgroup>
+ <article>
+    <p><em>This article follows the <a href="lessons-on-building-an-sdk-2.html">lessons on building an sdk (part2)</a>.</em></p>
+<p><span class="!">disclaimer</span> this article explains design patterns and abstract concepts while applying them with TypeScript. You should be prepared that the talk is pretty deep.</p>
+<h3 id="wrapping-it-all-in-a-model">Wrapping it all in a model</h3>
+<p>By building the <code>PropertyOf</code> class (in the previous part), we can allow ourself to go bigger:</p>
+<pre><code class="language-ts">import { PropertyOf } from '~/core'
+
+// quick and dirty cloning utility
+const clone = value =&gt; (
+  typeof prop.value !== 'object' ? prop.value :
+  Array.isArray(value) ? [...value] : 
+  { ...prop.value }
+)
+
+class WrapperFor&lt;Model&gt; {
+  get sync(): boolean {
+    return this.props.every(prop =&gt; this[prop].sync)
+  }
+
+  get sanity(): Record&lt;string, boolean&gt; {
+    return this.props
+      .map(prop =&gt; ({ [prop]: this[prop].sane }))
+      .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+  }
+
+  get sane(): boolean {
+    return Object.values(this.sanity).every(check =&gt; check)
+  }
+
+  constructor(
+    public model: Model,
+    private props: string[],
+  ) {}
+
+  async push(complete = false): boolean {
+    if (this.sync)
+      return true
+
+    if (complete &amp;&amp; !this.sane)
+      throw new Error('the model youre trying to sync is invalid')
+
+    const props: Record&lt;string, PropertyOf&gt; = this.props
+      .filter(prop =&gt; this[prop].sane &amp;&amp; !this[prop].sync)
+      .map(prop =&gt; ({ [prop]: this[prop] }))
+      .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+
+    const cache: object = {}
+
+    for (const [name, prop] of Object.entries(props)) {
+      cache[name] = clone(prop.value))
+
+      if (!(await prop.push())) {
+        for (const [prop, value] of Object.entries(cache)) {
+          this[prop].value = value
+          await this[prop].push()
+        }
+
+        return false
+      }
+
+      delete cache[name]
+    }
+
+    return true
+  }
+}</code></pre>
+<p>Which would need to be used as:</p>
+<pre><code class="language-ts">import { WrapperFor } from '~/core'
+import { UserModel } from '~/users'
+import displayNameOf from '~/users/displayNameOf'
+
+class User extends WrapperFor&lt;UserModel&gt; {
+  get displayName() {
+    return displayNameOf(this.model)
+  }
+
+  constructor(model) {
+    super(model, ['displayName'])
+  }
+}</code></pre>
+<p>With only this much code, you'd have simple way to have a full model connected with a backend, all thanks to the atomic updates of PropertyOf.</p>
+<p>This pattern is simple enough to get going with most of cases we had to encounter, although the <code>push()</code> implemention doesn't allow for bulk updates since it's just looping over each properties but that's fine since our backend strategy is built on this principles.</p>
+<p>...</p>
+<p><strong>Soon enough we had additional features which broke this promise</strong>. As a reaction, we created a second version of the push implementation which would allow for patch-like updates transparently. We did not alter or destroy the first version since it was a requirement for <em>some</em> of the models.</p>
+<pre><code class="language-ts">import { PropertyOf } from '~/core'
+
+// quick and dirty cloning utility
+const clone = value =&gt; (
+  typeof prop.value !== 'object' ? prop.value :
+  Array.isArray(value) ? [...value] : 
+  { ...prop.value }
+)
+
+type Push&lt;T&gt; = (val: T) =&gt; Promise&lt;any&gt;
+
+class WrapperForV2&lt;Model&gt; extends WrapperFor&lt;Model&gt; {
+  async push(call: Push&lt;Partial&lt;Model&gt;&gt;, complete = false): boolean {
+    if (this.sync)
+      return true
+
+    if (complete &amp;&amp; !this.sane)
+      throw new Error('the model youre trying to sync is invalid')
+
+    const props: Record&lt;string, PropertyOf&gt; = this.props
+      .filter(prop =&gt; this[prop].sane &amp;&amp; !this[prop].sync)
+      .map(prop =&gt; ({ [prop]: this[prop] }))
+      .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+
+    const patch: Partial&lt;Model&gt; = {}
+
+    for (const [name, prop] of Object.entries(props))
+      patch = { ...patch, ...prop.patch(prop.value) }
+
+    try {
+      await call(patch)
+
+      for (const prop of Object.values(props))
+        prop.sync = true
+
+      return true
+    }
+    catch(e) {
+      return false
+    }
+  }
+}</code></pre>
+<h3 id="extending-to-collections">Extending to collections</h3>
+<p>The last block we needed was manage collections. There are two types of them: the one which ids are only returned, and the one which are returned as part of a bigger object.</p>
+<p>For the id ones, you can use PropertyOf and consider the array as a single data type. You'll need to do "immutable manipulations" and avoid <code>.push</code>, <code>.pop</code>, <code>.shift</code>, <code>.unshift</code> or <code>.splice</code> (as per usual) - otherwise it should be fine.</p>
+<p>For nested structures which are handled as collections, we can also use PropertyOf to manage the root node itself, but items of the collection need to be handled individually - so there's a need to build a tool for that.</p>
+<p>Consider the domain:</p>
+<pre><code class="language-ts">type Locale = 'en' | 'fr' | 'jp'
+
+type Localized = {
+  name: string
+  description: string
+}
+
+type Item {
+  id: string
+  i18n: Record&lt;Locale, Localized&gt;
+  categories: string[]
+}</code></pre>
+<p>A typical data structure grabbed by a server call would be:</p>
+<pre><code class="language-ts">import { getArticleById } from './aFakeAmazonApi'
+
+const article: Item = await getArticleById('B071R5W4YS')
+console.log(article)
+
+/*
+{
+  id: 'B071R5W4YS',
+  i18n: {
+    en: {
+      name: "french bread",
+      description: "crispy and unique to french country",
+    },
+
+    fr: {
+      name: "une baguette",
+      description: "on reve de ce qu'on peut, me jugez pas",
+    }
+  }
+}
+*/</code></pre>
+<p>When being in a back office where you need to manage the i18n sub-structure, you'd have actions to add or remove languages, and each language should be editable independently.</p>
+<p>For the <em>each language should be editable independently</em>, we're gonna stick to the basics.</p>
+<pre><code class="language-ts">import { PropertyOf } from '~/core'
+
+class LocalizedName extends PropertyOf&lt;Localized, string&gt; {
+  get value() { return this.context.name }
+  public patch(name) { return { name } }
+}
+
+class LocalizedDescription extends PropertyOf&lt;Localized, string&gt; {
+  get value() { return this.context.description }
+  public patch(description) { return { description } }
+}</code></pre>
+<p>Note that we didn't provide a default value as fallback. This is intentional since in the next block we'll abuse this information (<code>value === undefined</code>) to provide default values there instead.</p>
+<p>Let's wrap the <code>Localized</code> model into a bigger object.</p>
+<pre><code class="language-ts">class LocalizedWrapper extends WrapperFor&lt;Localized&gt; {
+  get name() { return new LocalizedName(this.model) }
+  get description() { return new LocalizedDescription(this.model) }
+
+  constructor(model: Localized = {}) {
+    super(model, ['name', 'description'])
+
+    if (!this.name.value)
+      this.name.value = ''
+
+    if (!this.description.value)
+      this.description.value = ''
+  }
+
+  // we override this method to prevent usage
+  async push() {}
+}</code></pre>
+<p>At this point we can create new LocalizedWrapper objects with <code>new LocalizedWrapper()</code> and its internal model will be ready to insert in the collection.</p>
+<p>As the <code>i18n</code> collection is just a property of <code>Item</code>, we can simply extend PropertyOf with according types and code <code>add</code> and <code>del</code> methods.</p>
+<p>The trick to make it work is to use manually the commit function and provide a "custom patch" which contain the collection with or without a specific key.</p>
+<p>We'll also re-wire the sanity getter to sub instances.</p>
+<pre><code class="language-ts">class LocalizedCollection extends PropertyOf&lt;Item, Record&lt;string, Localized&gt;&gt; {
+  get sanity() {
+    return Object.entries(this.model)
+      .map(([key, model]) =&gt; ({
+        [`i18n.${key}`]: new LocalizedWrapper(model).sane
+      }))
+      .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+  }
+
+  constructor(
+    model: Context,
+    commit: Commit&lt;Context&gt; = ({ i18n }, context) =&gt; { context.i18n = i18n }
+  ) { super(model, commit) }
+
+  add(key: string, draft: Partial&lt;Localized&gt; = {})  {
+    // we use this to initialize default data structure
+    const wrapper = new LocalizedWrapper(draft)
+
+    this.commit({ ...this.model, [key]: draft })
+    this.sync = false
+  }
+
+  del(key: string) {
+    const { [key]: omit, ...model } = this.model
+
+    this.commit({ model })
+    this.sync = false
+  }
+}</code></pre>
+<p>And that's pretty much the last block missing to our arsenal.<br><strong>After that, everything has been based on the same patterns.</strong></p>
+<p>Here's how to <em>use</em> those objects in a Vue component (very quickly):</p>
+<pre><code class="language-html">&lt;template&gt;
+  &lt;div class="i18n"&gt;
+    &lt;div class="lang" v-for="(wrapper, lang) in i18n"&gt;
+      &lt;h2&gt;{{ lang }}&lt;/h2&gt;
+
+      &lt;label&gt;Name:&lt;/label&gt;
+      &lt;input type="text" v-model="wrapper.name.value"&gt;
+      &lt;div v-if="!wrapper.name.sane"&gt;
+        {{ wrapper.name.sanity }}
+      &lt;/div&gt;
+
+      &lt;label&gt;Description:&lt;/label&gt;
+      &lt;input type="text" v-model="wrapper.description.value"&gt;
+      &lt;div v-if="!wrapper.description.sane"&gt;
+        {{ wrapper.description.sanity }}
+      &lt;/div&gt;
+
+      &lt;button :disabled="!wrapper.sane" @click="() =&gt; collection.del(lang)"&gt;Delete&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div&gt;
+    &lt;input type="text" @keypress.enter.prevent="add"&gt;
+    &lt;button :disabled="!dirty || busy" @click="save"&gt;save&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  props: {
+    i18n: {
+      type: Object,
+      required: true,
+    }
+  },
+
+  data: () =&gt; ({
+    busy: false
+  }),
+
+  computed: {
+    collection: vm =&gt; new LocalizedCollection(vm.i18n),
+    sanity: vm =&gt; collection.sanity,
+    dirty: vm =&gt; !collection.sync,
+
+    wrappers: vm =&gt; Object.entries(vm.i18n)
+      .map(([key, value]) =&gt; { [key]: new LocalizedWrapper(value) })
+      .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+  },
+
+  methods: {
+    add({ target }) {
+      this.collection.add(target.value)
+      target.value = ''
+    },
+
+    async save() {
+      this.busy = true
+      await this.collection.push()
+      this.busy = false
+    }
+  }
+}</code></pre>
+<p>And that should do it!</p>
+<h3 id="thanks-for-reading">Thanks for reading!</h3>
+<p>I hope this small 3 part serie was as nice for you as it was for me. I've been trying my best to summarize our efforts in the most concise way, hoping you'll find some values in it. I know it's been a long read but I truely believe I can't cut more than I already did.</p>
+<p>I'm pretty sure there are other ways to architecture an SDK especially if you had better backend conditions. <strong>We did what we did because it suited us, and that should always be your first priority.</strong></p>
+<p>With these patterns we had to produce lots of code on the SDK side <em>(and i've been adding shorter versions in here, our codebase isn't that advanced)</em> but the consumer side has never been cleaner and has a bright future ahead, and when writing an SDK I believe that's the target you reach for.</p>
+<p>In the possible improvements to make our own DX better, there's obviously some factorization possible and generators to create (you can really see it in the last <code>LocalizedName</code> and <code>LocalizedDescription</code> examples), a possible abstraction of the concept of collection (with a version for Array as well), and why not html5 attributes generators from validators.</p>
+<p>The world is yours! Go create!</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>

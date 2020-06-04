@@ -44,7 +44,7 @@
 <h3 id="the-guardian-pattern">The guardian pattern</h3>
 <h4 id="overview">Overview</h4>
 <p>I'm not sure that it's the right way to name this pattern, but as you'll see it's an easy way to describe it.</p>
-<p>In order to keep model dumb, (im)mutability and atomicity of backend update, I came up with a simple, abstract object which somehow acts as <a href="https://en.wikipedia.org/wiki/Delegation_pattern">a delegator</a> but where delegation would mainly "wrap up" methods on a higher level, here the guardian acts upon a model, manipulate it and handle everything that a model should handle itself.</p>
+<p>In order to "keep model dumb", "be (im)mutable" and "sync with backend atomicly" I came up with a simple abstract object which somehow acts as <a href="https://en.wikipedia.org/wiki/Delegation_pattern">a delegator</a> ; but where delegation would mainly "wrap up" methods on a higher level, here it acts upon a model, manipulate it and handle everything that a model should handle itself : like <a href="https://en.wikipedia.org/wiki/Legal_guardian">a guardian</a>.</p>
 <p>It goes like this:</p>
 <pre><code class="language-ts">type Commit&lt;C&gt; = (patch: Partial&lt;C&gt;, context?: C) =&gt; void
 
@@ -69,13 +69,13 @@ class PropertyOf&lt;C, T extends object&gt; {
     protected commit?: Commit&lt;C&gt;,
   ) {}
 }</code></pre>
-<p><strong>This core thing is what makes (im)mutability work.</strong> It goes like: when setting a value, produce the minimum patch to mutate the context with a given value, and then call a commit function which will use this patch and the model to act as a setter. Making the distinction allows to implement both mutable and immutable flows easily.</p>
+<p><strong>This core thing is what makes (im)mutability work.</strong> It goes like: when setting a value, produce the minimum patch to mutate the context with a given value, and then call a commit function which will use this patch and the model to act as a setter. Making the distinction between the steps allows to implement both mutable and immutable flows easily.</p>
 <p>Let's try to use this class with a very simple example:</p>
 <pre><code class="language-ts">import { PropertyOf } from '~/core'
 import { UserModel } from '~/users'
 
 class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
-  get value() { return this.context.displayName }
+  get value() { return this.context.displayName ?? '' }
 
   public patch(val) {
     return { displayName: val }
@@ -151,6 +151,15 @@ class Name extends React.Component {
 }</code></pre>
 <p>The base seems flexible enough to see the future, yet stable enough to start to build upon.
 After this realization it was quite easy to implement additional features.</p>
+<h4 id="default-values-and-draft-objects">Default values and draft objects</h4>
+<p>For models which have been created and not yet saved in db, there's one easy thing to do: call the setter with a default value: because the setter creates a patch and the patch is an object structure, then the property will be created dynamically.</p>
+<pre><code class="language-ts">const draft = {}
+const displayName = displayNameOf(draft)
+
+console.log(displayName.value) // '' (because we added a default value with "?? ''")
+
+displayName.value = 'default'
+console.log(draft) // { displayName: '' } created by the set/patch/commit flow</code></pre>
 <h4 id="data-validation">Data validation</h4>
 <p>We built own our data validation system at the heart of the sdk. This allows to have entirely custom validation process which fits and follows server side rules. This part is the only one we duely "copied" from the server.</p>
 <p>The core elements library looks a bit like :</p>
@@ -217,7 +226,7 @@ import { UserModel } from '~/users'
 +const validators = { required }
 
 class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
-  get value() { return this.context.displayName }
+  get value() { return this.context.displayName ?? '' }
 
   public patch(val) {
     return { displayName: val }
@@ -273,7 +282,7 @@ class PropertyOf&lt;C, T extends object&gt; {
   ) {}
 
 + async push(call: Push&lt;T&gt;): Promise&lt;boolean&gt; {
-+   if (this.sync)
++   if (!call || this.sync)
 +     return true
 +
 +   if (!this.sane)
@@ -299,7 +308,7 @@ import { required } from '~/validators'
 const validators = { required }
 
 class DisplayNameOf extends PropertyOf&lt;UserModel, string&gt; {
-  get value() { return this.context.displayName }
+  get value() { return this.context.displayName ?? '' }
 
   public patch(val) {
     return { displayName: val }
@@ -354,7 +363,7 @@ class PublishSwitch extends PropertyOf&lt;BlogPost, string&gt; {
 
 export default context =&gt; new PublishSwitch(context).value</code></pre>
 <h3 id="conclusions">Conclusions</h3>
-<p>Well that was quite rich and long but I hope you enjoyed. In the next post we'll exploit this object even more to build complex data structures such as models and collections.</p>
+<p>Well that was quite rich and long but I hope you enjoyed. In <a href="lessons-on-building-an-sdk-part3.html">the next post</a> we'll exploit this object even more to build complex data structures such as models and collections.</p>
 
   </article></section>
 
