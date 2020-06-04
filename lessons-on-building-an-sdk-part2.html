@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
     <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Lessons on building an SDK (part2)"><meta property="description" content="Concerns and primary goals while coding a library"><meta property="og:description" content="Concerns and primary goals while coding a library"><meta property="og:url" content="/lessons-on-building-an-sdk-part2.html"><meta property="article:published_time" content="1591228800001"></head>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Lessons on building an SDK (part2)"><meta property="description" content="Basic patterns and foundations of an sdk"><meta property="og:description" content="Basic patterns and foundations of an sdk"><meta property="og:url" content="/lessons-on-building-an-sdk-part2.html"><meta property="article:published_time" content="1591228800001"></head>
 
   <body class="post">
     <header>
@@ -39,7 +39,7 @@
     <h6>June 4th, 2020</h6>
   </hgroup>
  <article>
-    <p><em>This article follows the <a href="lessons-on-building-an-sdk-1.html">lessons on building an sdk (part1)</a>.</em></p>
+    <p>In this article we'll cover basic patterns that I discovered and crafted for the SDK I was working on at LINE. If you need more context, you can read the first part of this serie called: <a href="lessons-on-building-an-sdk-part1.html">lessons on building an sdk (part1)</a>.</p>
 <p><span class="!">disclaimer</span> this article explains design patterns and abstract concepts while applying them with TypeScript. You should be prepared that the talk is pretty deep.</p>
 <h3 id="the-guardian-pattern">The guardian pattern</h3>
 <h4 id="overview">Overview</h4>
