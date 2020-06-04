@@ -1,0 +1,376 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta name="author" content="Julien Barbay">
+    <meta name="twitter:creator" content="@y_nk">
+    <meta name="twitter:card" content="summary">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>y_nk – Lessons on building an SDK (part2)</title>
+
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="alternate" type="application/rss+xml" href="./feed.xml">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/styles/paraiso-dark.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.0.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  <meta property="og:type" content="article"><meta property="article:author" content="Julien Barbay"><meta property="og:title" content="Lessons on building an SDK (part2)"><meta property="description" content="Concerns and primary goals while coding a library"><meta property="og:description" content="Concerns and primary goals while coding a library"><meta property="og:url" content="/lessons-on-building-an-sdk-part2.html"><meta property="article:published_time" content="1591228800001"></head>
+
+  <body class="post">
+    <header>
+      <h1><a href="./">
+        <svg id="y_nk" viewBox="0 0 100 65">
+          <polygon class="bk" points="10.1,0 20.3,10.1 0,10.1"></polygon>
+          <polygon class="ft" points="20.3,10.1 46.2,36.1 36.1,46.2 0,10.1"></polygon>
+          <polygon class="bk" points="35.6,10.1 45.8,20.3 45.8,0"></polygon>
+          <polygon class="ft" points="89.9,44.3 89.9,64.6 45.8,20.3 45.8,0"></polygon>
+          <polygon class="bk" points="89.9,0 79.7,10.1 100,10.1"></polygon>
+          <polygon class="ft" points="79.7,10.1 75.3,14.6 85.4,24.7 100,10.1"></polygon>
+          <polygon class="bk" points="100,54.4 89.9,44.3 89.9,64.6"></polygon>
+        </svg>
+      </a></h1>
+    </header>
+
+    <section id="main">
+  <hgroup>
+    <h2>Lessons on building an SDK (part2)</h2>
+    <h6>June 4th, 2020</h6>
+  </hgroup>
+ <article>
+    <p><em>This article follows the <a href="lessons-on-building-an-sdk-1.html">lessons on building an sdk (part1)</a>.</em></p>
+<p><span class="!">disclaimer</span> this article explains design patterns and abstract concepts while applying them with TypeScript. You should be prepared that the talk is pretty deep.</p>
+<h3 id="the-guardian-pattern">The guardian pattern</h3>
+<h4 id="overview">Overview</h4>
+<p>I'm not sure that it's the right way to name this pattern, but as you'll see it's an easy way to describe it.</p>
+<p>In order to keep model dumb, (im)mutability and atomicity of backend update, I came up with a simple, abstract object which somehow acts as <a href="https://en.wikipedia.org/wiki/Delegation_pattern">a delegator</a> but where delegation would mainly "wrap up" methods on a higher level, here the guardian acts upon a model, manipulate it and handle everything that a model should handle itself.</p>
+<p>It goes like this:</p>
+<pre><code class="language-ts">type Commit&lt;C&gt; = (patch: Partial&lt;C&gt;, context?: C) =&gt; void
+
+// C stands for "Context", T for "Type"
+class PropertyOf&lt;C, T extends object&gt; {
+  get value(): T { return null! }
+
+  set value(val: T) {
+    if (!this.commit)
+      throw new Error('this value is readonly')
+
+    if (this.value !== val)
+      this.commit(this.patch(val), this.context)
+  }
+
+  public patch(val: T): Partial&lt;C&gt; {
+    throw new Error('the patch function isnt implemented')
+  }
+
+  constructor(
+    protected context: C,
+    protected commit?: Commit&lt;C&gt;,
+  ) {}
+}</code></pre>
+<p><strong>This core thing is what makes (im)mutability work.</strong> It goes like: when setting a value, produce the minimum patch to mutate the context with a given value, and then call a commit function which will use this patch and the model to act as a setter. Making the distinction allows to implement both mutable and immutable flows easily.</p>
+<p>Let's try to use this class with a very simple example:</p>
+<pre><code class="language-ts">import { PropertyOf } from '~/core'
+import { UserModel } from '~/users'
+
+class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
+  get value() { return this.context.displayName }
+
+  public patch(val) {
+    return { displayName: val }
+  }
+
+  constructor(
+    model: C,
+    commit: Commit&lt;C&gt; = ({ displayName }, context) =&gt; { context.displayName = displayName }
+  ) { super(model, commit) }
+}
+
+export default (context, commit) =&gt; new DisplayNameOf(context, commit)</code></pre>
+<p>First you'd need to extend and qualify the types of the <code>PropertyOf</code> class, then implement the value's getter and patch function.</p>
+<p>The <code>constructor</code> here has been overloaded with default parameters. <strong>The key component is the default value of the commit parameter.</strong> By default, the commit function uses the patch given by the setter to mutate the existing model.</p>
+<p>We keep the commit function as a parameter to allow customization is setter behavior without endangering the guardian or its model. That said, <strong>even if the model mutates, the guardian object remains stateless</strong> and easily replaceable. It doesn't hold anything and can be garbage collected, leaving only the domain's objects in memory (for example in your state manager). </p>
+<p>Here's a mutable example:</p>
+<pre><code class="language-ts">import { userFetchByNickName } from '~/fakeApi'
+import displayNameOf from '~/users/displayNameOf'
+
+const user = await userFetchByNickName('y_nk')
+const displayName = displayNameOf(user)
+
+// Easy one: calling the getter
+console.log(displayName.value) // y_nk
+
+/*
+  Let's call the setter
+
+  Call stack:
+    1. call to .patch(val) to produce "the minimum patch to apply"
+    2. call to .commit(patch, model)
+    3. =&gt; default commit executes: model.prop = patch.prop
+
+  So it's mutated correctly!
+*/
+displayName.value = displayName.value.toUpperCase()
+
+console.log(displayName.value) // Y_NK</code></pre>
+<p>Since <code>displayName.value</code> is a pair of getter/setter, it also means that <strong>it's ok to use reactive libraries</strong> (for VueJS users, it means you can <code>v-model</code> it).</p>
+<p>If you wish to implement it in an immutable way (to hook it with React's <code>setState</code>) you'd only have to provide your own commit function:</p>
+<pre><code class="language-ts">import React from 'react'
+
+import { userFetchByNickName } from '~/fakeApi'
+import displayNameOf from '~/users/displayNameOf'
+
+class Name extends React.Component {
+  state = {}
+
+  async componentWillMount() {
+    const user = await userFetchByNickName('y_nk')
+    this.setState({ user })
+  }
+
+  render = () =&gt; {
+    const { user } = this.state
+
+    // here's the magic. we branch out for a closed update cycle
+    // and instead propose to call setState to update the model
+    const commit = (patch, model) =&gt; this.setState({
+      user: { ...model, ...patch }
+    })
+
+    const displayName = displayNameOf(user, commit)
+
+    // hopefully when the setter will be called,
+    // setState will be called and the component will re-render
+    const onClick = () =&gt; {
+      displayName.value = displayName.value.toUpperCase()
+    }
+
+    return &lt;div&gt;{ displayName.value }&lt;/div&gt;
+  }
+}</code></pre>
+<p>The base seems flexible enough to see the future, yet stable enough to start to build upon.
+After this realization it was quite easy to implement additional features.</p>
+<h4 id="data-validation">Data validation</h4>
+<p>We built own our data validation system at the heart of the sdk. This allows to have entirely custom validation process which fits and follows server side rules. This part is the only one we duely "copied" from the server.</p>
+<p>The core elements library looks a bit like :</p>
+<pre><code class="language-ts">export type Validator&lt;T&gt; = (value: T) =&gt; boolean
+export type Validators&lt;T&gt; = Record&lt;string, Validator&lt;T&gt;&gt;
+
+export const validate = &lt;T&gt;(value: T, validators: Validators&lt;T&gt;): Record&lt;string, boolean&gt; =&gt; (
+  Object.entries(validators)
+    .map(([key, validator]) =&gt; ({ [key]: validator(value) }))
+    .reduce((a, b) =&gt; ({ ...a, ...b }), {})
+)</code></pre>
+<p>It looks amazingly small but there wasn't so much more to do to be honest. We also created some basic validators so start with:</p>
+<pre><code class="language-ts">import { Validator } from '~/validators'
+
+export const required: Validator&lt;string&gt; = val =&gt; !!val
+
+export const minlength = (min: number): Validator&lt;string&gt; =&gt; (
+  val =&gt; val?.length &gt;= min
+)
+
+export const maxlength = (max: number): Validator&lt;string&gt; =&gt; (
+  val =&gt; val?.length &lt;= max
+)</code></pre>
+<p>The integration was lightweight. We only needed to add few things:</p>
+<pre><code class="language-diff">+import { Validators, validate } from '~/validators'
+
+type Commit&lt;C&gt; = (patch: Partial&lt;C&gt;, context?: C) =&gt; void
+
+class PropertyOf&lt;C, T extends object&gt; {
++ get sanity(): Record&lt;string, boolean&gt; {
++   return validate(this.value, this.validators)
++ }
+
++ get sane(): boolean {
++   return Object.values(this.sanity).every(check =&gt; check)
++ }
+
+  get value(): T { return null! }
+
+  set value(val: T) {
+    if (!this.commit)
+      throw new Error('this value is readonly')
+
+    if (this.value !== val)
+      this.commit(this.patch(val), this.context)
+  }
+
+  public patch(val: T): Partial&lt;C&gt; {
+    throw new Error('the patch function isnt implemented')
+  }
+
+  constructor(
+    protected context: C,
+    protected commit?: Commit&lt;C&gt;,
++   protected validators: Record&lt;string, Validator&lt;T&gt;&gt; = {},
+  ) {}
+}</code></pre>
+<p>Because <code>sanity</code> and <code>sane</code> are getters, their values are calculated everytime you access them, so it's always up to date. <strong>No need for reactivity, for which getters are already native computed values</strong> (without a cache system, but still.)</p>
+<p>To implement it on your side, simply add:</p>
+<pre><code class="language-diff">import { PropertyOf } from '~/core'
+import { UserModel } from '~/users'
++import { required } from '~/validators'
+
++const validators = { required }
+
+class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
+  get value() { return this.context.displayName }
+
+  public patch(val) {
+    return { displayName: val }
+  }
+
+  constructor(
+    model: C,
+    commit: Commit&lt;C&gt; = ({ displayName }, context) =&gt; { context.displayName = displayName }
+-  ) { super(model, commit) }
++  ) { super(model, commit, validators) }
+}
+
+export default (context, commit) =&gt; new DisplayNameOf(context, commit)</code></pre>
+<h4 id="server-synchronization">Server synchronization</h4>
+<p>As a mean to "have everything in one place", we also decided to integrate server side update into the <code>PropertyOf</code> class. It's a process way too specific to be hardcoded into a base class, but we could draw the blueprint:</p>
+<pre><code class="language-diff">import { Validators, validate } from '~/validators'
+
+type Commit&lt;C&gt; = (patch: Partial&lt;C&gt;, context?: C) =&gt; void
++type Push&lt;T&gt; = (val: T) =&gt; Promise&lt;any&gt;
+
+class PropertyOf&lt;C, T extends object&gt; {
++ public sync: boolean = true
+
+  get sanity(): Record&lt;string, boolean&gt; {
+    return validate(this.value, this.validators)
+  }
+
+  get sane(): boolean {
+    return Object.values(this.sanity).some(check =&gt; !check)
+  }
+
+  get value(): T { return null! }
+
+  set value(val: T) {
+    if (!this.commit)
+      throw new Error('this value is readonly')
+
+-    if (this.value !== val)
++    if (this.value !== val) {
+      this.commit(this.patch(val), this.context)
++     this.sync = false
++    }
+  }
+
+  public patch(val: T): Partial&lt;C&gt; {
+    throw new Error('the patch function isnt implemented')
+  }
+
+  constructor(
+    protected context: C,
+    protected commit?: Commit&lt;C&gt;,
+    protected validators: Record&lt;string, Validator&lt;T&gt;&gt; = {}
+  ) {}
+
++ async push(call: Push&lt;T&gt;): Promise&lt;boolean&gt; {
++   if (this.sync)
++     return true
++
++   if (!this.sane)
++     throw new Error('the value youre trying to sync is invalid')
++
++   try {
++     await call(this.value)
++     this.sync = true
++     return true
++   }
++   catch(e) {
++     return false
++   }
++ }
+}</code></pre>
+<p>Which requires few lines later on:</p>
+<pre><code class="language-diff">+import { updateUserProp } from '~/fakeApi'
+
+import { PropertyOf } from '~/core'
+import { UserModel } from '~/users'
+import { required } from '~/validators'
+
+const validators = { required }
+
+class DisplayNameOf extends PropertyOf&lt;UserModel, string&gt; {
+  get value() { return this.context.displayName }
+
+  public patch(val) {
+    return { displayName: val }
+  }
+
+  constructor(
+    model: C,
+    commit: Commit&lt;C&gt; = ({ displayName }, context) =&gt; { context.displayName = displayName }
+  ) { super(model, commit, validators) }
+
++ async push() {
++   const push = async val =&gt; await updateUserProp({ value: val })
++   return super.push(push)
++ }
+}
+
+export default (context, commit) =&gt; new DisplayNameOf(context, commit)</code></pre>
+<p>With this class only, we could create code which could drive every single form input and data bound to a model, but the strength of this pattern doesn't stop here.</p>
+<h4 id="virtual-properties">Virtual properties</h4>
+<p>There were some cases where data would be buried deep in the model structure, making it painful to retrieve or check against. Sometimes, the data structure itself wouldn't be so convenient to the frontend needs.</p>
+<p>We started to see that the guardian pattern could also serve this purpose. <strong>Since everything was getters and setters, why not abstract ourselves from the model data structure</strong> and provide a strong independant and reliable structure on top?</p>
+<p>With a data model of:</p>
+<pre><code class="language-ts">type BlogPost = {
+  id: string,
+  status: 'draft' | 'published',
+}</code></pre>
+<p>We can leverage the use of <code>value</code> getter and setter to create an abstraction which takes care of <em>business decisions</em> built on top of our pure model:</p>
+<pre><code class="language-ts">import { publishPost, unpublishPost } from '~/fakeApi'
+
+import { PropertyOf } from '~/core'
+import { BlogPost } from '~/users'
+
+class PublishSwitch extends PropertyOf&lt;BlogPost, string&gt; {
+  get value() {
+    return this.context.status === 'published'
+  }
+
+  public patch(val) {
+    const status = val ? 'published' : 'draft'
+    return { status }
+  }
+
+  async push() {
+    const push = async val =&gt; (val
+      ? await publishPost(this.model.id)
+      : await unpublishPost(this.model.id)
+    )
+
+    return super.push(push)
+  }
+}
+
+export default context =&gt; new PublishSwitch(context).value</code></pre>
+<h3 id="conclusions">Conclusions</h3>
+<p>Well that was quite rich and long but I hope you enjoyed. In the next post we'll exploit this object even more to build complex data structures such as models and collections.</p>
+
+  </article></section>
+
+    <footer>
+      <a href="./" class="!">← back</a>
+    </footer>
+
+    <script>
+      const colors = ['blue', 'cornflowerblue', 'darkorange', 'darkturquoise', 'deepskyblue', 'dodgerblue',
+        'gold', 'goldenrod', 'indigo', 'lightcoral', 'lightgreen', 'lightpink', 'lightseagreen', 'lightskyblue',
+        'lightslategray', 'limegreen', 'mediumaquamarine', 'mediumblue', 'mediumspringgreen', 'midnightblue',
+        'moccasin', 'navajowhite', 'orange', 'orangered', 'palegreen', 'paleturquoise', 'pink', 'rebeccapurple',
+        'royalblue', 'salmon', 'sandybrown', 'seagreen', 'skyblue', 'springgreen', 'steelblue', 'teal', 'tomato']
+
+      document.body.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)])
+    </script>
+  
+
+</body></html>
