@@ -90,7 +90,7 @@
 <h4 id="atomicity">Atomicity</h4>
 <p>The developers center console is <em>a meta project</em>: it aggregates many developer products of LINE into one interface. And you can expect from a corporation as big as LINE that each product is developed by separate teams which take different decisions based on the product's target, the team's skills and even the trends of the year. You could think of it as a old school graphql without a flattening layer (so, a proxy).</p>
 <p>At best you get some restful api to interact with, but most has been made with a different concept in mind which is atomic mutation : for a specific object, you would need to update each property independently in a <code>/api/{object}/{property}</code> fashion along with a <code>{ value: '' }</code> payload. It has the benefit to update independently parts of a model but it also implies that <em>updates of a whole or partial model at once aren't supported.</em> This backend's infrastructure somehow heavily influenced the building blocks of our constructions.</p>
-<h3 id="conclusions">Conclusions</h3>
+<h3 id="lets-code-a-little">Let's code a little!</h3>
 <p>Building an sdk isn't so hard after all, but for that I've learnt that building something sustainable comes with preparation and concepts which are beyond code, like values and principles.</p>
 <p>That said, I made some good discoveries and after few iterations we came up with interesting patterns that I thought were also worth sharing.</p>
 <p>In <a href="lessons-on-building-an-sdk-part2.html">the next post</a> we'll dig deeper in the foundations of your product.</p>
