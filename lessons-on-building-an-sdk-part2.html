@@ -152,20 +152,35 @@ class Name extends React.Component {
 <p>The base seems flexible enough to see the future, yet stable enough to start to build upon.
 After this realization it was quite easy to implement additional features.</p>
 <h4 id="default-values-and-draft-objects">Default values and draft objects</h4>
-<p>For models which have been created and not yet saved in db, there's one easy thing to do: call the setter with a default value: because the setter creates a patch and the patch is an object structure, then the property will be created dynamically.</p>
-<pre><code class="language-ts">const draft = {}
+<p>For models which have been created and not yet saved in db, there's one easy thing to do: initialize the guardian with an empty object, and call the setter with a default value: because the setter creates a patch and the patch is an object structure, then the property will be created dynamically.</p>
+<pre><code class="language-ts">const draft = {} // empty structure
 const displayName = displayNameOf(draft)
 
 console.log(displayName.value) // '' (because we added a default value with "?? ''")
 
 displayName.value = 'default'
 console.log(draft) // { displayName: '' } created by the set/patch/commit flow</code></pre>
+<h4 id="getter-only-shortcuts">Getter-only shortcuts</h4>
+<p>Properties which didn't need any of the complexity could be reduced to a bare minimum (ready to be extended later):</p>
+<pre><code class="language-ts">import { PropertyOf } from '~/core'
+import { UserModel } from '~/users'
+
+class UserIdOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
+  get value() { return this.context.userId }
+}
+
+// if one day this becomes writable, no need to refactor a lot. just override patch()
+export default (context) =&gt; new UserIdOf(context)</code></pre>
 <h4 id="data-validation">Data validation</h4>
 <p>We built own our data validation system at the heart of the sdk. This allows to have entirely custom validation process which fits and follows server side rules. This part is the only one we duely "copied" from the server.</p>
 <p>The core elements library looks a bit like :</p>
-<pre><code class="language-ts">export type Validator&lt;T&gt; = (value: T) =&gt; boolean
+<pre><code class="language-ts">// blueprint of a single validator
+export type Validator&lt;T&gt; = (value: T) =&gt; boolean
+
+// a collection of validators
 export type Validators&lt;T&gt; = Record&lt;string, Validator&lt;T&gt;&gt;
 
+// a reducer to execute all validators and aggregate their result
 export const validate = &lt;T&gt;(value: T, validators: Validators&lt;T&gt;): Record&lt;string, boolean&gt; =&gt; (
   Object.entries(validators)
     .map(([key, validator]) =&gt; ({ [key]: validator(value) }))
@@ -221,9 +236,13 @@ class PropertyOf&lt;C, T extends object&gt; {
 <p>To implement it on your side, simply add:</p>
 <pre><code class="language-diff">import { PropertyOf } from '~/core'
 import { UserModel } from '~/users'
-+import { required } from '~/validators'
++import { required, minLength, maxLength } from '~/validators'
 
-+const validators = { required }
++const validators = {
+  required,
+  minLength: minLength(1),
+  maxLength: maxLength(64),
+}
 
 class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
   get value() { return this.context.displayName ?? '' }
@@ -240,12 +259,29 @@ class DisplayNameOf&lt;C = UserModel&gt; extends PropertyOf&lt;C, string&gt; {
 }
 
 export default (context, commit) =&gt; new DisplayNameOf(context, commit)</code></pre>
+<p>When using, you'd get:</p>
+<pre><code class="language-ts">const user = { displayName: 'y_nk' }
+const displayName = displayNameOf(user)
+
+console.log(displayName.sane) // true
+console.log(displayName.sanity) // { required: true, minLength: true, maxLength: true }
+
+displayName.value = ''
+
+console.log(displayName.sane) // false
+console.log(displayName.sanity) // { required: true, minLength: false, maxLength: true }
+
+displayName.value = 'im way too old for this goddamn validation thing.'
+
+console.log(displayName.sane) // false
+console.log(displayName.sanity) // { required: true, minLength: true, maxLength: false }</code></pre>
+<p>That way, the guardian would provide proper validation report without taking side on throwing errors, showing alerts or preventing setting the value. The UI can do whatever ui-necessary thing it wants to based on that, but always the validation will happen outside of it.</p>
 <h4 id="server-synchronization">Server synchronization</h4>
-<p>As a mean to "have everything in one place", we also decided to integrate server side update into the <code>PropertyOf</code> class. It's a process way too specific to be hardcoded into a base class, but we could draw the blueprint:</p>
+<p>As a mean to "have everything in one place", we also decided to integrate server side update into the <code>PropertyOf</code> class. It's a process way too intimate for each property, but nevertheless we could at least add some shortcuts in our base class:</p>
 <pre><code class="language-diff">import { Validators, validate } from '~/validators'
 
 type Commit&lt;C&gt; = (patch: Partial&lt;C&gt;, context?: C) =&gt; void
-+type Push&lt;T&gt; = (val: T) =&gt; Promise&lt;any&gt;
++type Push&lt;T&gt; = (val: T) =&gt; Promise&lt;any&gt; // a push is a function which "pushes" changes somewhere distant
 
 class PropertyOf&lt;C, T extends object&gt; {
 + public sync: boolean = true
@@ -267,7 +303,7 @@ class PropertyOf&lt;C, T extends object&gt; {
 -    if (this.value !== val)
 +    if (this.value !== val) {
       this.commit(this.patch(val), this.context)
-+     this.sync = false
++     this.sync = false // concept similar to "dirtiness"
 +    }
   }
 
@@ -282,15 +318,15 @@ class PropertyOf&lt;C, T extends object&gt; {
   ) {}
 
 + async push(call: Push&lt;T&gt;): Promise&lt;boolean&gt; {
-+   if (!call || this.sync)
++   if (!call || this.sync) // no need to call if in sync. save bandwidth
 +     return true
 +
-+   if (!this.sane)
++   if (!this.sane) // strongly disagree on updating what you know is invalid
 +     throw new Error('the value youre trying to sync is invalid')
 +
 +   try {
 +     await call(this.value)
-+     this.sync = true
++     this.sync = true // reset the marker
 +     return true
 +   }
 +   catch(e) {
@@ -299,7 +335,7 @@ class PropertyOf&lt;C, T extends object&gt; {
 + }
 }</code></pre>
 <p>Which requires few lines later on:</p>
-<pre><code class="language-diff">+import { updateUserProp } from '~/fakeApi'
+<pre><code class="language-diff">+import { axios } from '~/axiosClient'
 
 import { PropertyOf } from '~/core'
 import { UserModel } from '~/users'
@@ -320,28 +356,35 @@ class DisplayNameOf extends PropertyOf&lt;UserModel, string&gt; {
   ) { super(model, commit, validators) }
 
 + async push() {
-+   const push = async val =&gt; await updateUserProp({ value: val })
++   const push = async val =&gt; await axiosClient.put(`/api/user/${this.context.userId}`, { value: val })
 +   return super.push(push)
 + }
 }
 
 export default (context, commit) =&gt; new DisplayNameOf(context, commit)</code></pre>
+<p>We'd use it as:</p>
+<pre><code class="language-ts">const user = { displayName: 'y_nk' }
+const displayName = displayNameOf(user)
+
+displayName.value = displayName.value.toUppercase()
+const onSaveButtonClick = async () =&gt; await displayName.push()</code></pre>
 <p>With this class only, we could create code which could drive every single form input and data bound to a model, but the strength of this pattern doesn't stop here.</p>
 <h4 id="virtual-properties">Virtual properties</h4>
 <p>There were some cases where data would be buried deep in the model structure, making it painful to retrieve or check against. Sometimes, the data structure itself wouldn't be so convenient to the frontend needs.</p>
-<p>We started to see that the guardian pattern could also serve this purpose. <strong>Since everything was getters and setters, why not abstract ourselves from the model data structure</strong> and provide a strong independant and reliable structure on top?</p>
+<p>We started to see that the guardian pattern could also serve this purpose. <strong>Since everything was getters and setters, why not abstract ourselves from the model data structure and provide a strong independant and reliable structure on top?</strong></p>
 <p>With a data model of:</p>
 <pre><code class="language-ts">type BlogPost = {
   id: string,
   status: 'draft' | 'published',
 }</code></pre>
-<p>We can leverage the use of <code>value</code> getter and setter to create an abstraction which takes care of <em>business decisions</em> built on top of our pure model:</p>
-<pre><code class="language-ts">import { publishPost, unpublishPost } from '~/fakeApi'
+<p>We can leverage the use of <code>value</code> getter and setter to create an abstraction which takes care of <em>business decisions</em> built on top of our pure model. We no longer deal with <code>status: string</code> but rather <code>isPublished: boolean</code>:</p>
+<pre><code class="language-ts">import { axios } from '~/axiosClient'
 
 import { PropertyOf } from '~/core'
 import { BlogPost } from '~/users'
 
-class PublishSwitch extends PropertyOf&lt;BlogPost, string&gt; {
+// notice that here, T is boolean rather than string
+class IsPublished extends PropertyOf&lt;BlogPost, boolean&gt; {
   get value() {
     return this.context.status === 'published'
   }
@@ -352,16 +395,16 @@ class PublishSwitch extends PropertyOf&lt;BlogPost, string&gt; {
   }
 
   async push() {
-    const push = async val =&gt; (val
-      ? await publishPost(this.model.id)
-      : await unpublishPost(this.model.id)
-    )
+    const push = async val =&gt; {
+      const status = val ? 'published' : 'draft'
+      await axios.put(`/api/posts/${this.context.id}`, { status })
+    }
 
     return super.push(push)
   }
 }
 
-export default context =&gt; new PublishSwitch(context).value</code></pre>
+export default (context, commit) =&gt; new IsPublished(context, commit)</code></pre>
 <h3 id="going-bigger">Going bigger</h3>
 <p>Well that was quite rich and long but I hope you enjoyed. In <a href="lessons-on-building-an-sdk-part3.html">the next post</a> we'll exploit this object even more to build complex data structures such as models and collections.</p>
 
