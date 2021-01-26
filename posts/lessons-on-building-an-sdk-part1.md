@@ -84,7 +84,7 @@ For as much as 250+ integration tests, for which most of them were:
 
 ### Particularities
 
-#### Authentificaiton
+#### Authentication
 
 While _many_ infrastructures would have a library friendly login process (involving requests and such), LINE doesn't: there's no endpoint to programmatically call and magically auth yourself given a username/password pair. I know it sounds weird but after talking to the engineers in charge it seems they had "good reasons". Given this, instead of a classic `Client` class with a constructor and a `auth(username: string, password: string)` method, I went for an easier approach and exposed a function to inject token bearer header in the axios client instance used along with the client.
 
@@ -94,7 +94,7 @@ Consumers coding for an other environment (like my own tests) would have to inte
 
 #### Atomicity
 
-The developers center console is _a meta project_: it aggregates many developer products of LINE into one interface. And you can expect from a corporation as big as LINE that each product is developed by separate teams which take different decisions based on the product's target, the team's skills and even the trends of the year. You could think of it as a old school graphql without a flattening layer (so, a proxy).
+The developers center console is _a meta project_ and so does its unique backend: it aggregates many developer products of LINE into one interface. And you can expect from a corporation as big as LINE that each product is developed by separate teams which take different decisions based on the product's target, the team's skills and even the trends of the year. You could think of it as a old school graphql without a flattening layer (so, a proxy).
 
 At best you get some restful api to interact with, but most has been made with a different concept in mind which is atomic mutation : for a specific object, you would need to update each property independently in a `/api/{object}/{property}` fashion along with a `{ value: '' }` payload. It has the benefit to update independently parts of a model but it also implies that _updates of a whole or partial model at once aren't supported._ This backend's infrastructure somehow heavily influenced the building blocks of our constructions.
 

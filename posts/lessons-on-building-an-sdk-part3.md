@@ -9,73 +9,11 @@ _This article follows the [lessons on building an sdk (part2)](lessons-on-buildi
 
 ### Wrapping it all in a model
 
-By building the `PropertyOf` class (in the previous part), we can allow ourself to go bigger:
+Having properties independently is nice, but could become cumbersome if you had (like us) huge models (50+ props). Even with all the conveniency we had, forms were having 50 PropertyOf instances, and as much in computed getters/setters to link v-model properly. Not so scalable.
 
-```ts
-import { PropertyOf } from '~/core'
+By building the `PropertyOf` class (from the previous part), we could allow ourself to go bigger. We can make a wrapper class, _for which we only define getters to PropertyOf instances._
 
-// quick and dirty cloning utility
-const clone = value => (
-  typeof prop.value !== 'object' ? prop.value :
-  Array.isArray(value) ? [...value] : 
-  { ...prop.value }
-)
-
-class WrapperFor<Model> {
-  get sync(): boolean {
-    return this.props.every(prop => this[prop].sync)
-  }
-
-  get sanity(): Record<string, boolean> {
-    return this.props
-      .map(prop => ({ [prop]: this[prop].sane }))
-      .reduce((a, b) => ({ ...a, ...b }), {})
-  }
-
-  get sane(): boolean {
-    return Object.values(this.sanity).every(check => check)
-  }
-
-  constructor(
-    public model: Model,
-    private props: string[],
-  ) {}
-
-  async push(complete = false): boolean {
-    if (this.sync)
-      return true
-
-    if (complete && !this.sane)
-      throw new Error('the model youre trying to sync is invalid')
-
-    const props: Record<string, PropertyOf> = this.props
-      .filter(prop => this[prop].sane && !this[prop].sync)
-      .map(prop => ({ [prop]: this[prop] }))
-      .reduce((a, b) => ({ ...a, ...b }), {})
-
-    const cache: object = {}
-
-    for (const [name, prop] of Object.entries(props)) {
-      cache[name] = clone(prop.value))
-
-      if (!(await prop.push())) {
-        for (const [prop, value] of Object.entries(cache)) {
-          this[prop].value = value
-          await this[prop].push()
-        }
-
-        return false
-      }
-
-      delete cache[name]
-    }
-  
-    return true
-  }
-}
-```
-
-Which would need to be used as:
+We'd like to code only that much.
 
 ```ts
 import { WrapperFor } from '~/core'
@@ -93,9 +31,83 @@ class User extends WrapperFor<UserModel> {
 }
 ```
 
-With only this much code, you'd have simple way to have a full model connected with a backend, all thanks to the atomic updates of PropertyOf.
+So the inside should look like this:
 
-This pattern is simple enough to get going with most of cases we had to encounter, although the `push()` implemention doesn't allow for bulk updates since it's just looping over each properties but that's fine since our backend strategy is built on this principles.
+```ts
+import { PropertyOf } from '~/core'
+
+// quick and dirty cloning utility
+const clone = value => (
+  typeof prop.value !== 'object' ? prop.value :
+  Array.isArray(value) ? [...value] : 
+  { ...prop.value }
+)
+
+class WrapperFor<Model> {
+  // the model is in sync if all its properties are
+  get sync(): boolean {
+    return this.props.every(prop => this[prop].sync)
+  }
+
+  // the model is sane if all its properties are
+  get sanity(): Record<string, boolean> {
+    return this.props
+      .map(prop => ({ [prop]: this[prop].sane }))
+      .reduce((a, b) => ({ ...a, ...b }), {})
+  }
+
+  // easy boolean all-in-one report
+  get sane(): boolean {
+    return Object.values(this.sanity).every(check => check)
+  }
+
+  constructor(
+    public model: Model,
+    private props: string[],
+  ) {}
+
+  async push(complete = false): boolean {
+    if (this.sync)
+      return true
+
+    if (complete && !this.sane)
+      throw new Error('the model youre trying to sync is invalid')
+
+    // we compute a { getterName: PropertyOf } collection filtering out 
+    // the invalid ones (validation errors) and synced ones (pristines).
+    const props: Record<string, PropertyOf> = this.props
+      .filter(prop => this[prop].sane && !this[prop].sync)
+      .map(prop => ({ [prop]: this[prop] }))
+      .reduce((a, b) => ({ ...a, ...b }), {})
+
+    const cache: object = {}
+
+    for (const [name, prop] of Object.entries(props)) {
+      cache[name] = clone(prop.value) // we clone the value to avoid referencing objects
+
+      const updated = await prop.push()
+
+      // if one update fails, we revert the entire sync one prop at a time
+      if (!updated) {
+        for (const [prop, value] of Object.entries(cache)) {
+          this[prop].value = value
+          await this[prop].push()
+        }
+
+        return false
+      }
+
+      delete cache[name]
+    }
+  
+    return true
+  }
+}
+```
+
+With only this much code we had a simple way to have a full model connected with a backend, all thanks to the atomic updates of PropertyOf.
+
+This pattern is simple enough to get going with most of cases we had to encounter, although the `push()` implemention doesn't allow for bulk updates since it's just looping over each properties ; but that's fine since our backend strategy is built on this principles.
 
 ...
 
@@ -121,6 +133,7 @@ class WrapperForV2<Model> extends WrapperFor<Model> {
     if (complete && !this.sane)
       throw new Error('the model youre trying to sync is invalid')
 
+    // same aggregation here
     const props: Record<string, PropertyOf> = this.props
       .filter(prop => this[prop].sane && !this[prop].sync)
       .map(prop => ({ [prop]: this[prop] }))
@@ -128,6 +141,8 @@ class WrapperForV2<Model> extends WrapperFor<Model> {
 
     const patch: Partial<Model> = {}
 
+    // we build our patch by calling the internal "patch" of a prop, which
+    // normally is used to create a single local mutation for a model.
     for (const [name, prop] of Object.entries(props))
       patch = { ...patch, ...prop.patch(prop.value) }
     
@@ -135,7 +150,7 @@ class WrapperForV2<Model> extends WrapperFor<Model> {
       await call(patch)
 
       for (const prop of Object.values(props))
-        prop.sync = true
+        prop.sync = true // we manually mark the prop as synced finally
 
       return true
     }
@@ -148,7 +163,7 @@ class WrapperForV2<Model> extends WrapperFor<Model> {
 
 ### Extending to collections
 
-The last block we needed was manage collections. There are two types of them: the one which ids are only returned, and the one which are returned as part of a bigger object.
+The last block we needed was "managed collections". There are two types of them: the one which ids are only returned, and the one which are returned as part of a bigger object.
 
 For the id ones, you can use PropertyOf and consider the array as a single data type. You'll need to do "immutable manipulations" and avoid `.push`, `.pop`, `.shift`, `.unshift` or `.splice` (as per usual) - otherwise it should be fine.
 
@@ -174,7 +189,7 @@ type Item {
 A typical data structure grabbed by a server call would be:
 
 ```ts
-import { getArticleById } from './aFakeAmazonApi'
+import { getArticleById } from './someFakeAmazonApi'
 
 const article: Item = await getArticleById('B071R5W4YS')
 console.log(article)
@@ -215,7 +230,7 @@ class LocalizedDescription extends PropertyOf<Localized, string> {
 }
 ```
 
-Note that we didn't provide a default value as fallback. This is intentional since in the next block we'll abuse this information (`value === undefined`) to provide default values there instead.
+Note that we didn't provide a default value as fallback. This is intentional since in the next block we'll abuse this information (`value === undefined`) to provide default values there instead (see [part2](/lessons-on-building-an-sdk-part2.html#default-values-and-draft-objects) for reminder).
 
 Let's wrap the `Localized` model into a bigger object.
 
@@ -249,10 +264,11 @@ We'll also re-wire the sanity getter to sub instances.
 
 ```ts
 class LocalizedCollection extends PropertyOf<Item, Record<string, Localized>> {
+  // we change sanity to show all sub properties of i18n (dynamically)
   get sanity() {
-    return Object.entries(this.model)
-      .map(([key, model]) => ({
-        [`i18n.${key}`]: new LocalizedWrapper(model).sane
+    return Object.entries(this.context)
+      .map(([key, localized]) => ({
+        [`i18n.${key}`]: new LocalizedWrapper(localized).sane
       }))
       .reduce((a, b) => ({ ...a, ...b }), {})
   }
@@ -266,12 +282,12 @@ class LocalizedCollection extends PropertyOf<Item, Record<string, Localized>> {
     // we use this to initialize default data structure
     const wrapper = new LocalizedWrapper(draft)
 
-    this.commit({ ...this.model, [key]: draft })
+    this.commit({ ...this.context, [key]: draft })
     this.sync = false
   }
 
   del(key: string) {
-    const { [key]: omit, ...model } = this.model
+    const { [key]: omit, ...model } = this.context
 
     this.commit({ model })
     this.sync = false
@@ -348,7 +364,7 @@ export default {
 }
 ```
 
-And that should do it!
+The whole process has been a success so far. **We removed business rules and complexity from frontend and allow frontend to be extensible and replacable without having to recode everything from scratch next time.** We moved the complexity away from Ui to a core package, which also avoid cluttering the Ui space with business rules and let the Ui do what a Ui should do only. More importantly, the codebase of the sdk being pure javascript, we already started to have CLI tools to help engineers of the company to build things as part of their own projects.
 
 ### Thanks for reading!
 

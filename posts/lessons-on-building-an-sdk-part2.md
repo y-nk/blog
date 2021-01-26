@@ -149,16 +149,32 @@ After this realization it was quite easy to implement additional features.
 
 #### Default values and draft objects
 
-For models which have been created and not yet saved in db, there's one easy thing to do: call the setter with a default value: because the setter creates a patch and the patch is an object structure, then the property will be created dynamically.
+For models which have been created and not yet saved in db, there's one easy thing to do: initialize the guardian with an empty object, and call the setter with a default value: because the setter creates a patch and the patch is an object structure, then the property will be created dynamically.
 
 ```ts
-const draft = {}
+const draft = {} // empty structure
 const displayName = displayNameOf(draft)
 
 console.log(displayName.value) // '' (because we added a default value with "?? ''")
 
 displayName.value = 'default'
 console.log(draft) // { displayName: '' } created by the set/patch/commit flow
+```
+
+#### Getter-only shortcuts
+
+Properties which didn't need any of the complexity could be reduced to a bare minimum (ready to be extended later):
+
+```ts
+import { PropertyOf } from '~/core'
+import { UserModel } from '~/users'
+
+class UserIdOf<C = UserModel> extends PropertyOf<C, string> {
+  get value() { return this.context.userId }
+}
+
+// if one day this becomes writable, no need to refactor a lot. just override patch()
+export default (context) => new UserIdOf(context)
 ```
 
 #### Data validation
@@ -168,9 +184,13 @@ We built own our data validation system at the heart of the sdk. This allows to 
 The core elements library looks a bit like :
 
 ```ts
+// blueprint of a single validator
 export type Validator<T> = (value: T) => boolean
+
+// a collection of validators
 export type Validators<T> = Record<string, Validator<T>>
 
+// a reducer to execute all validators and aggregate their result
 export const validate = <T>(value: T, validators: Validators<T>): Record<string, boolean> => (
   Object.entries(validators)
     .map(([key, validator]) => ({ [key]: validator(value) }))
@@ -239,9 +259,13 @@ To implement it on your side, simply add:
 ```diff
 import { PropertyOf } from '~/core'
 import { UserModel } from '~/users'
-+import { required } from '~/validators'
++import { required, minLength, maxLength } from '~/validators'
 
-+const validators = { required }
++const validators = {
+  required,
+  minLength: minLength(1),
+  maxLength: maxLength(64),
+}
 
 class DisplayNameOf<C = UserModel> extends PropertyOf<C, string> {
   get value() { return this.context.displayName ?? '' }
@@ -260,15 +284,37 @@ class DisplayNameOf<C = UserModel> extends PropertyOf<C, string> {
 export default (context, commit) => new DisplayNameOf(context, commit)
 ```
 
+When using, you'd get:
+
+```ts
+const user = { displayName: 'y_nk' }
+const displayName = displayNameOf(user)
+
+console.log(displayName.sane) // true
+console.log(displayName.sanity) // { required: true, minLength: true, maxLength: true }
+
+displayName.value = ''
+
+console.log(displayName.sane) // false
+console.log(displayName.sanity) // { required: true, minLength: false, maxLength: true }
+
+displayName.value = 'im way too old for this goddamn validation thing.'
+
+console.log(displayName.sane) // false
+console.log(displayName.sanity) // { required: true, minLength: true, maxLength: false }
+```
+
+That way, the guardian would provide proper validation report without taking side on throwing errors, showing alerts or preventing setting the value. The UI can do whatever ui-necessary thing it wants to based on that, but always the validation will happen outside of it.
+
 #### Server synchronization
 
-As a mean to "have everything in one place", we also decided to integrate server side update into the `PropertyOf` class. It's a process way too specific to be hardcoded into a base class, but we could draw the blueprint:
+As a mean to "have everything in one place", we also decided to integrate server side update into the `PropertyOf` class. It's a process way too intimate for each property, but nevertheless we could at least add some shortcuts in our base class:
 
 ```diff
 import { Validators, validate } from '~/validators'
 
 type Commit<C> = (patch: Partial<C>, context?: C) => void
-+type Push<T> = (val: T) => Promise<any>
++type Push<T> = (val: T) => Promise<any> // a push is a function which "pushes" changes somewhere distant
 
 class PropertyOf<C, T extends object> {
 + public sync: boolean = true
@@ -290,7 +336,7 @@ class PropertyOf<C, T extends object> {
 -    if (this.value !== val)
 +    if (this.value !== val) {
       this.commit(this.patch(val), this.context)
-+     this.sync = false
++     this.sync = false // concept similar to "dirtiness"
 +    }
   }
 
@@ -305,15 +351,15 @@ class PropertyOf<C, T extends object> {
   ) {}
 
 + async push(call: Push<T>): Promise<boolean> {
-+   if (!call || this.sync)
++   if (!call || this.sync) // no need to call if in sync. save bandwidth
 +     return true
 +
-+   if (!this.sane)
++   if (!this.sane) // strongly disagree on updating what you know is invalid
 +     throw new Error('the value youre trying to sync is invalid')
 +
 +   try {
 +     await call(this.value)
-+     this.sync = true
++     this.sync = true // reset the marker
 +     return true
 +   }
 +   catch(e) {
@@ -326,7 +372,7 @@ class PropertyOf<C, T extends object> {
 Which requires few lines later on:
 
 ```diff
-+import { updateUserProp } from '~/fakeApi'
++import { axios } from '~/axiosClient'
 
 import { PropertyOf } from '~/core'
 import { UserModel } from '~/users'
@@ -347,12 +393,22 @@ class DisplayNameOf extends PropertyOf<UserModel, string> {
   ) { super(model, commit, validators) }
 
 + async push() {
-+   const push = async val => await updateUserProp({ value: val })
++   const push = async val => await axiosClient.put(`/api/user/${this.context.userId}`, { value: val })
 +   return super.push(push)
 + }
 }
 
 export default (context, commit) => new DisplayNameOf(context, commit)
+```
+
+We'd use it as:
+
+```ts
+const user = { displayName: 'y_nk' }
+const displayName = displayNameOf(user)
+
+displayName.value = displayName.value.toUppercase()
+const onSaveButtonClick = async () => await displayName.push()
 ```
 
 With this class only, we could create code which could drive every single form input and data bound to a model, but the strength of this pattern doesn't stop here.
@@ -361,7 +417,7 @@ With this class only, we could create code which could drive every single form i
 
 There were some cases where data would be buried deep in the model structure, making it painful to retrieve or check against. Sometimes, the data structure itself wouldn't be so convenient to the frontend needs.
 
-We started to see that the guardian pattern could also serve this purpose. **Since everything was getters and setters, why not abstract ourselves from the model data structure** and provide a strong independant and reliable structure on top?
+We started to see that the guardian pattern could also serve this purpose. **Since everything was getters and setters, why not abstract ourselves from the model data structure and provide a strong independant and reliable structure on top?**
 
 With a data model of:
 
@@ -372,15 +428,16 @@ type BlogPost = {
 }
 ```
 
-We can leverage the use of `value` getter and setter to create an abstraction which takes care of _business decisions_ built on top of our pure model:
+We can leverage the use of `value` getter and setter to create an abstraction which takes care of _business decisions_ built on top of our pure model. We no longer deal with `status: string` but rather `isPublished: boolean`:
 
 ```ts
-import { publishPost, unpublishPost } from '~/fakeApi'
+import { axios } from '~/axiosClient'
 
 import { PropertyOf } from '~/core'
 import { BlogPost } from '~/users'
 
-class PublishSwitch extends PropertyOf<BlogPost, string> {
+// notice that here, T is boolean rather than string
+class IsPublished extends PropertyOf<BlogPost, boolean> {
   get value() {
     return this.context.status === 'published'
   }
@@ -391,16 +448,16 @@ class PublishSwitch extends PropertyOf<BlogPost, string> {
   }
 
   async push() {
-    const push = async val => (val
-      ? await publishPost(this.model.id)
-      : await unpublishPost(this.model.id)
-    )
+    const push = async val => {
+      const status = val ? 'published' : 'draft'
+      await axios.put(`/api/posts/${this.context.id}`, { status })
+    }
 
     return super.push(push)
   }
 }
 
-export default context => new PublishSwitch(context).value
+export default (context, commit) => new IsPublished(context, commit)
 ```
 
 ### Going bigger
